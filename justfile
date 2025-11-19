@@ -9,11 +9,11 @@ default:
 
 # Install pre-commit hooks
 @hooks:
-    pre-commit install
+    uvx pre-commit install
 
 # Run formatting and linting checks
 @check:
-    pre-commit run --all-files
+    uvx pre-commit run --all-files
 
 # Start development server with auto-reload
 run port=PORT:
