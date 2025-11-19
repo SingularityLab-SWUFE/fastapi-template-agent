@@ -1,0 +1,28 @@
+repos:
+-   repo: https://github.com/psf/black
+    rev: 25.11.0
+    hooks:
+    -   id: black
+        language_version: python3
+
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.5
+    hooks:
+    -   id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+    -   id: ruff-format
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files # 500KB
+      - id: debug-statements # pdb/ipdb/breakpoint
+      - id: check-case-conflict # '/' or '\'
+      # Safety
+      - id: check-merge-conflict
+      - id: detect-private-key
+      # Preflight check
+    #   - id: no-commit-to-branch
+    #     name: prevent commits to main
+    #     args: [--branch, main]
+
