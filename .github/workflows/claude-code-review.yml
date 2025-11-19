@@ -1,14 +1,14 @@
+# https://github.com/anthropics/claude-code-action/blob/main/examples/pr-review-filtered-authors.yml
 name: Claude Code Review
 
 on:
   pull_request:
     types: [opened, synchronize]
     # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    # detect changes on src and tests Python files
+    paths:
+      - "src/**/*.py"
+      - "tests/**/*.py"
 
 jobs:
   claude-review:
@@ -38,17 +38,20 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             REPO: ${{ github.repository }}
+            CONTRIBUTOR TYPE: ${{ github.event.pull_request.user.login }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Please review this pull request and provide feedback on:
+            Please review this pull request *briefly* and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
             - Test coverage
 
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive, responsible and helpful in your feedback.
 
+            If you find the contributor is new/external developer and has shown unfamiliarity with the codebase, provide them with additional context and guidelines to help them improve their contribution.
+            
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
