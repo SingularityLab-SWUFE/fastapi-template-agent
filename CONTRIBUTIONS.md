@@ -23,7 +23,7 @@ Issues may be labeled "Invalid" simply due to confusion caused by verbosity or n
 
 ## Pull Requests
 
-PRs that deviate from FastMCP's core principles will be rejected regardless of implementation quality. **PRs are NOT for iterating on ideas** - they should only be opened for ideas that already have a bias toward acceptance based on issue discussion.
+PRs that deviate from the project's core principles will be rejected regardless of implementation quality. **PRs are NOT for iterating on ideas** - they should only be opened for ideas that already have a bias toward acceptance based on issue discussion.
 
 ### Development Standards
 
@@ -88,7 +88,7 @@ uv run pytest
 uv run pytest tests/server/test_auth.py
 
 # Run with coverage
-uv run pytest --cov=fastmcp
+uv run pytest --cov
 
 # Skip integration tests for faster runs
 uv run pytest -m "not integration"
@@ -101,7 +101,7 @@ Tests should complete in under 1 second unless marked as integration tests. This
 
 ### Test Organization
 
-Our test organization mirrors the `src/` directory structure, creating a predictable mapping between code and tests. When you're working on `src/fastmcp/server/auth.py`, you'll find its tests in `tests/server/test_auth.py`. In rare cases tests are split further - for example, the OpenAPI tests are so comprehensive they're split across multiple files.
+Our test organization mirrors the `src/` directory structure, creating a predictable mapping between code and tests. When you're working on `src/server/auth.py`, you'll find its tests in `tests/server/test_auth.py`. In rare cases tests are split further - for example, the OpenAPI tests are so comprehensive they're split across multiple files.
 
 ### Test Markers
 
@@ -127,7 +127,7 @@ Test names and assertions should make the verified behavior obvious. A developer
 
 #### Using Fixtures
 
-Use fixtures to create reusable data, server configurations, or other resources for your tests. Note that you should **not** open FastMCP clients in your fixtures as it can create hard-to-diagnose issues with event loops.
+Use fixtures to create reusable data, server configurations, or other resources for your tests. Note that you should **not** open clients in your fixtures as it can create hard-to-diagnose issues with event loops.
 
 #### Effective Assertions
 
@@ -149,7 +149,7 @@ Try not to have too many assertions in a single test unless you truly need to ch
 
 #### Before Submitting
 
-1. **Run all checks**: `uv run prek run --all-files && uv run pytest`
+1. **Run all checks**: `uv run pre-commit run --all-files && uv run pytest`
 2. **Keep scope small**: One feature or fix per PR
 3. **Write clear description**: Your PR description becomes permanent documentation
 4. **Update docs**: Include documentation for API changes
@@ -166,7 +166,7 @@ Focus on the "why" - the code shows the "what". Keep it concise but complete.
 
 #### What We Look For
 
-**Framework Philosophy**: FastMCP is NOT trying to do all things or provide all shortcuts. Features are rejected when they don't align with the framework's vision, even if perfectly implemented. The burden of proof is on the PR to demonstrate value.
+**Framework Philosophy**: The project is NOT trying to do all things or provide all shortcuts. Features are rejected when they don't align with the project's vision, even if perfectly implemented. The burden of proof is on the PR to demonstrate value.
 **Code Quality**: We verify code follows existing patterns. Consistency reduces cognitive load. When every module works similarly, developers understand new code quickly.
 **Test Coverage**: Not every line needs testing, but every behavior does. Tests document intent and protect against regressions.
 **Breaking Changes**: May be acceptable in minor versions but must be clearly documented.
