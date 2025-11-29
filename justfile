@@ -23,6 +23,26 @@ run port=PORT:
 @test:
     uv run --frozen pytest -xvs tests
 
+# Generate database migration
+@db-migrate message:
+    uv run alembic revision --autogenerate -m "{{message}}"
+
+# Apply database migrations
+@db-upgrade:
+    uv run alembic upgrade head
+
+# Rollback last migration
+@db-downgrade:
+    uv run alembic downgrade -1
+
+# Show current migration version
+@db-current:
+    uv run alembic current
+
+# Show migration history
+@db-history:
+    uv run alembic history
+
 alias r := run
 alias t := test
 alias c := check
