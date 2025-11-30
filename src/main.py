@@ -2,14 +2,30 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.cache import close_cache, init_cache
 from src.core.config import settings
+
 from .session import close_db, init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db(settings.db.url, settings.db.echo)
+    await init_cache(
+        backend=settings.cache.backend,
+        host=settings.cache.host,
+        port=settings.cache.port,
+        db=settings.cache.db,
+        password=settings.cache.password,
+        encoding=settings.cache.encoding,
+        decode_responses=settings.cache.decode_responses,
+        socket_timeout=settings.cache.socket_timeout,
+        socket_connect_timeout=settings.cache.socket_connect_timeout,
+        max_connections=settings.cache.max_connections,
+        retry_on_timeout=settings.cache.retry_on_timeout,
+    )
     yield
+    await close_cache()
     await close_db()
 
 
