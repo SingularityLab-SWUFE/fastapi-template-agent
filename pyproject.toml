@@ -8,12 +8,14 @@ dependencies = [
     "asyncpg>=0.31.0",
     "fastapi>=0.115.0",
     "pydantic-settings>=2.12.0",
+    "redis[hiredis]>=7.1.0",
     "sqlmodel>=0.0.27",
     "uvicorn[standard]>=0.32.0",
 ]
 
 [dependency-groups]
 dev = [
+    "fakeredis>=2.32.1",
     "pytest>=8.3.3",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=6.1.1",
