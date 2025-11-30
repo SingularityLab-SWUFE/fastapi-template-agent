@@ -13,9 +13,9 @@ async def test_get_nonexistent_key(local_cache):
 
 
 async def test_set_with_ttl(local_cache):
-    await local_cache.set("key_ttl", "value", ttl=1)
+    await local_cache.set("key_ttl", "value", ttl=0.1)
     assert await local_cache.exists("key_ttl")
-    await asyncio.sleep(1.1)
+    await asyncio.sleep(0.11)
     assert not await local_cache.exists("key_ttl")
     assert await local_cache.get("key_ttl") is None
 
