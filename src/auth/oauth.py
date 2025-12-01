@@ -1,0 +1,45 @@
+from fastapi import APIRouter
+from httpx_oauth.clients.github import GitHubOAuth2
+from httpx_oauth.clients.google import GoogleOAuth2
+
+from src.core.config import settings
+
+from . import fastapi_users
+from .backend import auth_backend
+
+oauth_router = APIRouter()
+
+
+if settings.auth.oauth_google_client_id and settings.auth.oauth_google_client_secret:
+    google_oauth_client = GoogleOAuth2(
+        settings.auth.oauth_google_client_id,
+        settings.auth.oauth_google_client_secret,
+    )
+
+    oauth_router.include_router(
+        fastapi_users.get_oauth_router(
+            google_oauth_client,
+            auth_backend,
+            settings.auth.jwt_secret,
+            associate_by_email=True,
+        ),
+        prefix="/google",
+        tags=["auth"],
+    )
+
+if settings.auth.oauth_github_client_id and settings.auth.oauth_github_client_secret:
+    github_oauth_client = GitHubOAuth2(
+        settings.auth.oauth_github_client_id,
+        settings.auth.oauth_github_client_secret,
+    )
+
+    oauth_router.include_router(
+        fastapi_users.get_oauth_router(
+            github_oauth_client,
+            auth_backend,
+            settings.auth.jwt_secret,
+            associate_by_email=True,
+        ),
+        prefix="/github",
+        tags=["auth"],
+    )

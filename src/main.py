@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.auth.oauth import oauth_router
+from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
 from src.core.config import settings
 
@@ -35,6 +37,9 @@ app = FastAPI(
     debug=settings.app.debug,
     lifespan=lifespan,
 )
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(oauth_router, prefix="/auth", tags=["auth"])
 
 
 if __name__ == "__main__":
