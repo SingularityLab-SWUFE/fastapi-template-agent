@@ -6,26 +6,50 @@
 - [uv](https://github.com/astral-sh/uv)
 - [just](https://github.com/casey/just)
 
-### 安装 uv
+### Install uv
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 安装 just
+### Install just
 
-`just` 用于简化指令执行, 或你可以参考 `justfile` 中的指令来执行. 安装参考:
+`just` is used to simplify command execution. You can also refer to commands in `justfile` directly. Installation options:
 
 ```bash
 cargo install just
 ```
 
-或者
+Or
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
 ```
 
-## 贡献指南
+## Contributing
 
-[@CONTRIBUTIONS.md](/CONTRIBUTIONS.md)
+**Read [CONTRIBUTIONS.md](/CONTRIBUTIONS.md) before contributing.**
+
+### Quick Start for Contributors
+
+1. **Install dependencies**
+   ```bash
+   just dev
+   ```
+
+2. **Install pre-commit hooks**
+   ```bash
+   just hooks
+   ```
+
+3. **Create an issue first**
+   - Every PR requires a corresponding issue
+   - Discuss approach and scope before writing code
+
+4. **Run checks before submitting PR**
+   ```bash
+   just check
+   just test
+   ```
+
+For Chinese contributors, since this is a open-source project, please ensure that your commit messages or issues/PRs can be understood by the global community. It's recommended to write in English or provide English version alongside Chinese descriptions.
