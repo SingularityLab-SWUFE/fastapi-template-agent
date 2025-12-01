@@ -7,7 +7,7 @@ class AppSettings(BaseSettings):
         env_prefix="APP_",
     )
 
-    name: str
+    name: str = Field(default="FastAPI Template")
 
     version: str = Field(default="0.1.0")
     debug: bool = Field(default=False)

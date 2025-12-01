@@ -45,7 +45,8 @@ def test_settings_loading_env_variables():
     """
     Use env variables to create the Settings instance.
     """
-    from src.core.config import settings
+    from src.core.config.settings import Settings
 
+    settings = Settings()
     assert settings.app.name == "Test App Loading env var"
     assert settings.db.host == "localhost"

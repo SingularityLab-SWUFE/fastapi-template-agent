@@ -1,9 +1,19 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from src.cache import close_cache, init_cache
 from src.core.config import settings
+from src.core.handlers.exceptions import (
+    HTTPExceptionHandler,
+    ValueErrorHandler,
+    BusinessExceptionHandler,
+    BusinessException,
+)
+from src.core.middleware.exception_middleware import ExceptionMiddleware
+from src.core.responses.schemas import ErrorResponse
+from src.routers import users
 
 from .session import close_db, init_db
 
@@ -35,6 +45,39 @@ app = FastAPI(
     debug=settings.app.debug,
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse.error(exc.status_code, exc.detail).model_dump()
+    )
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content=ErrorResponse.error(400, str(exc)).model_dump()
+    )
+
+
+@app.exception_handler(BusinessException)
+async def business_exception_handler(request: Request, exc: BusinessException) -> JSONResponse:
+    return JSONResponse(
+        status_code=200,
+        content=ErrorResponse.error(exc.code, exc.message).model_dump()
+    )
+
+
+app.add_middleware(ExceptionMiddleware)
+
+app.include_router(users.router)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
