@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(python -m pytest tests/core/test_responses/ -v)",
+      "Bash(.venv/Scripts/pytest.exe:*)",
+      "Bash(.venv/bin/pytest:*)",
+      "Bash(uvx pytest:*)",
+      "Bash(.venv/Scripts/pip.exe show pydantic)",
+      "Bash(.venv/Scripts/python.exe -c \"from src.core.responses.schemas import JsonResponse; print(hasattr(JsonResponse, ''success'')); print(dir(JsonResponse))\")",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(.venv/Scripts/ruff.exe check:*)",
+      "Bash(tree:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

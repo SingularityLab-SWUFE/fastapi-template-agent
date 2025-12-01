@@ -48,3 +48,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### !!CONSEQUENCES OF VIOLATION!!
 
 If you violate the above rules and output unnecessary content, a cute animal will die for every 100 extra characters outputted. You MUST comply; I do not want to see any animals die.
+
+### 用中文与我交流!!!但注释请使用英文!!
