@@ -12,6 +12,7 @@ class Settings(BaseSettings):
         env_file=".env",
         # avoid snake_case conflict
         env_nested_delimiter="__",
+        extra="ignore",
     )
 
     app: AppSettings = Field(default_factory=AppSettings)

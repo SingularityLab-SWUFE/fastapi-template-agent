@@ -1,10 +1,11 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AppSettings(BaseSettings):
-    name: str
+    model_config = SettingsConfigDict(extra="ignore")
 
+    name: str
     version: str = Field(default="0.1.0")
     debug: bool = Field(default=False)
     host: str = Field(default="0.0.0.0")

@@ -20,7 +20,7 @@ if settings.auth.oauth_google_client_id and settings.auth.oauth_google_client_se
         fastapi_users.get_oauth_router(
             google_oauth_client,
             auth_backend,
-            settings.auth.jwt_secret,
+            settings.auth.jwt_secret_key,
             associate_by_email=True,
         ),
         prefix="/google",
@@ -37,7 +37,7 @@ if settings.auth.oauth_github_client_id and settings.auth.oauth_github_client_se
         fastapi_users.get_oauth_router(
             github_oauth_client,
             auth_backend,
-            settings.auth.jwt_secret,
+            settings.auth.jwt_secret_key,
             associate_by_email=True,
         ),
         prefix="/github",

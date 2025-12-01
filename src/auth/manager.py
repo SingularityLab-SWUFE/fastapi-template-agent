@@ -20,8 +20,8 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    reset_password_token_secret = settings.auth.jwt_secret
-    verification_token_secret = settings.auth.jwt_secret
+    reset_password_token_secret = settings.auth.jwt_secret_key
+    verification_token_secret = settings.auth.jwt_secret_key
 
     async def on_after_register(
         self, user: User, request: Request | None = None

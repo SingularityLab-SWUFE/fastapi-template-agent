@@ -18,7 +18,7 @@ from src.core.schemas import redis_keys
 
 def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(
-        secret=settings.auth.jwt_secret,
+        secret=settings.auth.jwt_secret_key,
         algorithm=settings.auth.jwt_algorithm,
         lifetime_seconds=settings.auth.jwt_lifetime_seconds,
     )

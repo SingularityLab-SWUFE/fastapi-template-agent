@@ -11,7 +11,9 @@
       "Bash(.venv/Scripts/python.exe -c \"from src.core.responses.schemas import JsonResponse; print(hasattr(JsonResponse, ''success'')); print(dir(JsonResponse))\")",
       "Bash(.venv/Scripts/python.exe:*)",
       "Bash(.venv/Scripts/ruff.exe check:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(uv run python:*)"
     ],
     "deny": [],
     "ask": []
