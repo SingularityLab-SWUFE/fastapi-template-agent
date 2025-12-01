@@ -3,10 +3,11 @@
 提供 FastAPI Depends 依赖，用于获取当前用户、验证 token 等。
 """
 
-from typing import Optional, Generator, List
+from typing import Optional, Generator, List, Dict, Any
 from datetime import datetime
+import logging
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import select
 
@@ -49,11 +50,17 @@ def _get_token_manager() -> TokenManager:
 
 
 async def get_current_user(
+    request: Request = None,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> User:
     """获取当前认证用户
 
+    支持两种模式：
+    1. 从 request.state.user_info 获取（中间件模式）
+    2. 从 credentials 解析（传统模式）
+
     Args:
+        request: FastAPI 请求对象（可选）
         credentials: HTTP 认证凭据
 
     Returns:
@@ -62,10 +69,56 @@ async def get_current_user(
     Raises:
         HTTPException: 认证失败
     """
+    # 优先从 request.state.user_info 获取（中间件模式）
+    if request and hasattr(request.state, "user_info"):
+        user_info = request.state.user_info
+        user_id = int(user_info["id"])
+
+        # 尝试从数据库加载完整用户信息
+        user: Optional[User] = None
+        try:
+            async with get_session() as session:
+                result = await session.exec(select(User).where(User.id == user_id))
+                user = result.first()
+        except Exception as exc:  # noqa: BLE001
+            # 数据库不可用时回退到中间件提供的精简用户信息
+            logging.getLogger(__name__).warning(
+                "get_current_user middleware mode DB lookup failed, "
+                "falling back to token user_info: %s",
+                exc,
+            )
+
+        # 如果数据库中找不到用户（或查询失败），回退到 token 携带的基础信息
+        if user is None:
+            return User(
+                id=user_id,
+                username=user_info.get("username", ""),
+                hashed_password="",
+                is_active=True,
+                is_superuser=False,
+            )
+
+        # 数据库中存在用户时，使用完整信息并做状态校验
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="用户已被禁用",
+            )
+
+        return user
+
+    # 传统模式：从 credentials 解析
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="未提供认证凭据",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not hasattr(credentials, 'credentials'):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

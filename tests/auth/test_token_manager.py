@@ -40,6 +40,8 @@ class TestTokenManager:
             algorithm="HS256",
             access_token_expire_minutes=30,
             refresh_token_expire_days=7,
+            issuer="test-issuer",
+            audience="test-audience",
         )
 
         # 设置模拟缓存

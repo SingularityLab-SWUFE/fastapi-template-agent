@@ -11,7 +11,7 @@ from src.core.decorators.response import handle_request
 from src.auth.dependencies import get_current_user, _get_token_manager
 from src.core.schemas.user import User
 from src.auth.token_manager import TokenManager
-
+from src.auth.manager import UserManager
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -65,20 +65,28 @@ async def login(request: Request, login_data: LoginRequest) -> Dict[str, Any]:
     """
     token_manager = _get_token_manager()
 
-    # 这里应该使用 UserManager.authenticate 进行认证
-    # 为了简化演示，我们先模拟认证逻辑
-    # 实际实现时需要连接数据库验证用户
+    # 创建用户管理器实例
+    user_manager = UserManager()
 
-    # TODO: 实现用户认证逻辑
-    # - 验证用户名/邮箱和密码
-    # - 检查用户是否活跃
-    # - 生成 token 对
-
-    # 暂时返回错误，等待实现
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="登录功能尚未实现，请使用数据库验证用户"
+    # 认证用户
+    user = await user_manager.authenticate(
+        login_data.username,
+        login_data.password,
     )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户名或密码错误",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 生成 token 对
+    tokens = await token_manager.create_token_pair(
+        user_id=user.id, username=user.username
+    )
+
+    return tokens
 
 
 @router.post("/refresh", response_model=RefreshResponse)
@@ -101,7 +109,7 @@ async def refresh_token(
     token_manager = _get_token_manager()
 
     # 验证 refresh_token
-    user_id = token_manager.verify_refresh_token(refresh_data.refresh_token)
+    user_id = await token_manager.verify_refresh_token(refresh_data.refresh_token)
 
     if user_id is None:
         raise HTTPException(
@@ -109,14 +117,29 @@ async def refresh_token(
             detail="无效的刷新 Token",
         )
 
-    # TODO: 获取用户信息并生成新的 access_token
-    # 需要从数据库获取用户信息
+    # 从数据库获取用户信息
+    from sqlmodel import select
+    from src.session import get_session
 
-    # 暂时返回错误，等待实现
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="刷新 Token 功能尚未实现，需要从数据库获取用户信息"
-    )
+    async with get_session() as session:
+        result = await session.exec(select(User).where(User.id == user_id))
+        user = result.first()
+
+        if user is None or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户不存在或已被禁用",
+            )
+
+        # 生成新的 access_token
+        access_token = token_manager.create_access_token(
+            user_id=user.id, username=user.username
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+        }
 
 
 @router.post("/logout")
@@ -150,7 +173,7 @@ async def logout(
     token = auth_header.split(" ")[1]
 
     token_manager = _get_token_manager()
-    success = token_manager.revoke_access_token(token)
+    success = await token_manager.revoke_access_token(token)
 
     if not success:
         raise HTTPException(
@@ -196,21 +219,57 @@ async def get_user_sessions(
 
     Returns:
         会话信息
-
-    Note:
-        这里可以返回用户当前的 refresh_token 信息
     """
-    # TODO: 实现获取用户会话信息
-    # 需要从 Redis 获取用户的活跃 refresh_token
+    token_manager = _get_token_manager()
+
+    # 从 CacheTokenStore 获取用户的活跃 refresh_token 信息
+    cache_store = token_manager.cache_store
+
+    # 获取用户当前的 refresh_token
+    user_token_key = f"user_tokens:{current_user.id}:refresh"
+    refresh_token_id = await cache_store._cache.get(user_token_key)
+
+    # 获取 refresh_token 的详细信息
+    sessions = []
+    if refresh_token_id:
+        token_info = await cache_store.get_refresh_token_info(refresh_token_id)
+        if token_info:
+            sessions.append(
+                {
+                    "device": "default",
+                    "last_active": token_info.get("last_accessed", "2025-12-01T10:00:00Z"),
+                    "refresh_token_id": refresh_token_id[:8] + "...",  # 仅返回前8位（脱敏）
+                }
+            )
 
     return {
         "user_id": current_user.id,
         "username": current_user.username,
-        "sessions": [
-            {
-                "device": "default",
-                "last_active": "2025-12-01T10:00:00Z",
-                # "refresh_token_id": "..."  # 不应该返回实际的 refresh_token
-            }
-        ]
+        "sessions": sessions,
     }
+
+
+@router.post("/logout-all")
+@handle_request
+async def logout_all_sessions(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, str]:
+    """踢出用户所有会话（注销所有设备）
+
+    Args:
+        request: FastAPI 请求对象
+        current_user: 当前认证用户
+
+    Returns:
+        注销成功消息
+
+    Raises:
+        HTTPException: 注销失败
+    """
+    token_manager = _get_token_manager()
+
+    # 撤销用户所有 token
+    await token_manager.cache_store.revoke_all_user_tokens(current_user.id)
+
+    return {"message": "已踢出所有会话"}

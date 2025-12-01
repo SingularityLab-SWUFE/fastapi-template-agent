@@ -49,6 +49,10 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "integration: marks tests as integration tests",
+    "client_process: marks tests that spawn processes",
+]
 
 [[tool.uv.index]]
 name = "tsinghua"

@@ -29,6 +29,14 @@ class JWTSettings(BaseModel):
         ge=1,
         description="refresh_token 过期时间（天）",
     )
+    issuer: str = Field(
+        default="fastapi-template-agent",
+        description="JWT 签发者标识",
+    )
+    audience: str = Field(
+        default="fastapi-template-client",
+        description="JWT 预期接收者标识",
+    )
 
     model_config = ConfigDict(env_prefix="JWT_")
 

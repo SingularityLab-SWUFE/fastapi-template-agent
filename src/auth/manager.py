@@ -1,60 +1,62 @@
 """自定义用户管理器
 
-基于 fastapi-users 的 UserManager，适配我们的 User 模型。
+独立实现的用户管理器，不依赖 fastapi-users。
 """
 
 from typing import Optional, Dict, Any
 from datetime import datetime
 
 from fastapi import Request
-from fastapi_users import BaseUserManager, IntegerIDMixin
-from fastapi_users.exceptions import UserAlreadyExists
 from sqlmodel import select
 
 from src.core.schemas.user import User
 from src.session import get_session
 
 
-class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
+class UserManager:
     """自定义用户管理器"""
+
+    def __init__(self):
+        """初始化用户管理器"""
+        pass
 
     async def create(
         self,
-        user_create: "UC",
-        safe: bool = False,
+        username: str,
+        email: str,
+        password: str,
         request: Optional[Request] = None,
     ) -> User:
         """创建用户
 
         Args:
-            user_create: 用户创建数据
-            safe: 是否安全模式（不包含敏感信息）
+            username: 用户名
+            email: 邮箱
+            password: 密码
             request: FastAPI 请求对象
 
         Returns:
             创建的用户
 
         Raises:
-            UserAlreadyExists: 用户已存在
+            ValueError: 用户已存在
         """
-        await self.validate_password(user_create.password, user_create)
-
         # 检查用户是否已存在
-        existing_user = await self.get_by_email(user_create.email)
+        existing_user = await self.get_by_email(email)
         if existing_user:
-            raise UserAlreadyExists()
+            raise ValueError("用户已存在")
+
+        # 哈希密码
+        from src.auth.token_manager import TokenManager
+        hashed_password = TokenManager.get_password_hash(password)
 
         # 创建用户
-        hashed_password = self.password_helper.hash(user_create.password)
-
         db_user = User(
-            username=user_create.username,
+            username=username,
             hashed_password=hashed_password,
-            email=user_create.email,
+            email=email,
             is_active=True,
             is_superuser=False,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
         )
 
         async with get_session() as session:
@@ -94,20 +96,25 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             return result.first()
 
     async def authenticate(
-        self, credentials: "PC"
+        self,
+        username_or_email: str,
+        password: str,
     ) -> Optional[User]:
         """用户认证
 
         Args:
-            credentials: 认证凭据（用户名/邮箱 + 密码）
+            username_or_email: 用户名或邮箱
+            password: 密码
 
         Returns:
             认证成功返回用户对象，失败返回 None
         """
-        user = await self.get_by_username(credentials.username)
+        # 先尝试用户名
+        user = await self.get_by_username(username_or_email)
 
+        # 再尝试邮箱
         if not user:
-            user = await self.get_by_email(credentials.username)
+            user = await self.get_by_email(username_or_email)
 
         if not user:
             return None
@@ -115,7 +122,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         if not user.is_active:
             return None
 
-        verified = await self.verify_password(credentials.password, user)
+        # 验证密码
+        from src.auth.token_manager import TokenManager
+        verified = TokenManager.verify_password(password, user.hashed_password)
         if not verified:
             return None
 
@@ -237,14 +246,3 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             是否活跃
         """
         return user.is_active
-
-
-# 类型注解
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from fastapi_users.schemas import UserCreate, UserUpdate
-    from fastapi_users.password import PasswordHelperProtocol
-
-    UC = UserCreate
-    PC = dict  # 认证凭据

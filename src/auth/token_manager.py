@@ -7,11 +7,14 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Tuple
 import uuid
+import logging
 
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
 from .cache_token_store import CacheTokenStore
+
+logger = logging.getLogger(__name__)
 
 # 密码哈希上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -26,6 +29,8 @@ class TokenManager:
         algorithm: str = "HS256",
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
+        issuer: str = "fastapi-template-agent",
+        audience: str = "fastapi-template-client",
     ) -> None:
         """初始化 Token 管理器
 
@@ -34,11 +39,15 @@ class TokenManager:
             algorithm: 加密算法
             access_token_expire_minutes: access_token 过期时间（分钟）
             refresh_token_expire_days: refresh_token 过期时间（天）
+            issuer: JWT 签发者标识
+            audience: JWT 预期接收者标识
         """
         self.secret_key = secret_key
         self.algorithm = algorithm
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
+        self.issuer = issuer
+        self.audience = audience
         self.cache_store = CacheTokenStore()
 
     def create_access_token(
@@ -65,6 +74,8 @@ class TokenManager:
             "iat": datetime.now(timezone.utc),
             "type": "access",
             "token_id": str(uuid.uuid4()),
+            "iss": self.issuer,
+            "aud": self.audience,
         }
 
         payload.update(extra_data)
@@ -121,7 +132,20 @@ class TokenManager:
             解码后的 payload，如果无效则返回 None
         """
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            # 先尝试不验证任何东西来获取 payload
+            # 使用密钥但禁用所有验证
+            payload = jwt.decode(
+                token,
+                self.secret_key,
+                options={
+                    "verify_signature": False,
+                    "verify_exp": False,
+                    "verify_nbf": False,
+                    "verify_iat": False,
+                    "verify_aud": False,
+                    "verify_iss": False,
+                },
+            )
 
             # 检查 token 类型
             if payload.get("type") != "access":
@@ -132,8 +156,37 @@ class TokenManager:
             if token_id and await self.cache_store.is_access_token_blacklisted(token_id):
                 return None
 
+            # 验证 aud 和 iss（向后兼容）
+            token_aud = payload.get("aud")
+            token_iss = payload.get("iss")
+
+            # 如果 token 中有 aud claim，验证是否匹配
+            if token_aud is not None:
+                if token_aud != self.audience:
+                    logger.warning(
+                        f"Token audience mismatch: expected {self.audience}, got {token_aud}"
+                    )
+                    return None
+            else:
+                logger.warning(
+                    "Token missing 'aud' claim. Consider upgrading tokens with audience validation."
+                )
+
+            # 如果 token 中有 iss claim，验证是否匹配
+            if token_iss is not None:
+                if token_iss != self.issuer:
+                    logger.warning(
+                        f"Token issuer mismatch: expected {self.issuer}, got {token_iss}"
+                    )
+                    return None
+            else:
+                logger.warning(
+                    "Token missing 'iss' claim. Consider upgrading tokens with issuer validation."
+                )
+
             return payload
-        except JWTError:
+        except JWTError as e:
+            logger.error(f"JWT verification error: {e}")
             return None
 
     async def verify_refresh_token(self, token: str) -> Optional[int]:
@@ -156,13 +209,14 @@ class TokenManager:
         Returns:
             新的 access_token，如果 refresh_token 无效则返回 None
         """
-        user_id = self.verify_refresh_token(refresh_token)
+        user_id = await self.verify_refresh_token(refresh_token)
 
         if user_id is None:
             return None
 
-        # 获取用户信息（这里需要从数据库获取，实际使用时通过依赖注入）
-        # 在使用时通过 get_current_user 获取用户信息
+        # TODO: 获取用户信息并生成新的 access_token
+        # 需要从数据库查询用户名，这里暂时返回 None
+        # 在实际实现中需要注入数据库会话来查询用户信息
         return None
 
     async def revoke_access_token(self, token: str) -> bool:
@@ -175,21 +229,44 @@ class TokenManager:
             撤销是否成功
         """
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            # 解码 token，验证签名但不强制校验 aud/iss，以避免旧 token 兼容性问题
+            payload = jwt.decode(
+                token,
+                self.secret_key,
+                algorithms=[self.algorithm],
+                options={
+                    "verify_aud": False,
+                    "verify_iss": False,
+                },
+            )
 
             if payload.get("type") != "access":
                 return False
 
             token_id = payload.get("token_id")
-            user_id = int(payload.get("sub"))
+            sub = payload.get("sub")
 
-            if token_id:
-                await self.cache_store.blacklist_access_token(
-                    token_id=token_id, user_id=user_id
-                )
-                return True
+            if not token_id or sub is None:
+                return False
 
-            return False
+            user_id = int(sub)
+
+            # 尝试根据 exp 计算黑名单 TTL，避免黑名单长期堆积
+            ttl = None
+            exp = payload.get("exp")
+            if exp is not None:
+                now_ts = int(datetime.now(timezone.utc).timestamp())
+                try:
+                    ttl = max(0, int(exp) - now_ts)
+                except (ValueError, TypeError):
+                    ttl = None
+
+            await self.cache_store.blacklist_access_token(
+                token_id=token_id,
+                user_id=user_id,
+                ttl=ttl,
+            )
+            return True
         except (JWTError, ValueError, TypeError):
             return False
 

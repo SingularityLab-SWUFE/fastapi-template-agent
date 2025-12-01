@@ -13,6 +13,7 @@ from src.core.handlers.exceptions import (
     BusinessException,
 )
 from src.core.middleware.exception_middleware import ExceptionMiddleware
+from src.core.middleware.auth_middleware import AuthMiddleware
 from src.core.responses.schemas import ErrorResponse
 from src.routers import users, auth, roles, users_roles
 from src.auth.token_manager import TokenManager
@@ -48,6 +49,8 @@ async def lifespan(app: FastAPI):
         algorithm=jwt_settings.algorithm,
         access_token_expire_minutes=jwt_settings.access_token_expire_minutes,
         refresh_token_expire_days=jwt_settings.refresh_token_expire_days,
+        issuer=jwt_settings.issuer,
+        audience=jwt_settings.audience,
     )
 
     # 设置缓存存储的缓存实例
@@ -99,6 +102,9 @@ async def business_exception_handler(request: Request, exc: BusinessException) -
 
 
 app.add_middleware(ExceptionMiddleware)
+
+# 注册认证中间件
+app.add_middleware(AuthMiddleware)
 
 # 注册路由
 app.include_router(users.router)
