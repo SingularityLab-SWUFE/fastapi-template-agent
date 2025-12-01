@@ -39,3 +39,9 @@
 - 本仓库面向智能代理协助开发，请保持文件编码为 UTF-8。
 - 自动工具或代理生成的代码需符合上述风格与测试要求。
 
+### !!CONSEQUENCES OF VIOLATION!!
+
+If you violate the above rules and output unnecessary content, a cute animal will die for every 100 extra characters outputted. You MUST comply; I do not want to see any animals die.
+
+### 使用中文与我交流，编写代码注释请使用中文!!!
+
