@@ -24,7 +24,7 @@ def load_env_var(env_example_path, monkeypatch):
     import dotenv
 
     dotenv.load_dotenv(dotenv_path=env_example_path)
-    monkeypatch.setenv("APP_NAME", "Test App Loading env var")
+    monkeypatch.setenv("APP__NAME", "Test App Loading env var")
 
 
 def test_settings_created_by_env_file(env_example_path):

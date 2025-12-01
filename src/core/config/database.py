@@ -1,13 +1,9 @@
 from typing import Literal
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="DB_",
-    )
-
     driver: Literal["postgresql", "sqlite"] = "postgresql"
     host: str = "localhost"
     port: int = 5432

@@ -1,12 +1,8 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="APP_",
-    )
-
     name: str
 
     version: str = Field(default="0.1.0")

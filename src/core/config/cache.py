@@ -1,13 +1,9 @@
 from typing import Literal
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class CacheSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="CACHE_",
-    )
-
     backend: Literal["redis", "local"] = "redis"
     host: str = "localhost"
     port: int = 6379
