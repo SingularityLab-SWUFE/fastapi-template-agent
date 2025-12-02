@@ -13,7 +13,8 @@
       "Bash(.venv/Scripts/ruff.exe check:*)",
       "Bash(tree:*)",
       "Bash(find:*)",
-      "Bash(uv run python:*)"
+      "Bash(uv run python:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

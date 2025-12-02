@@ -1,6 +1,6 @@
 import pytest
 
-from src.core.responses.schemas import JsonResponse
+from src.responses import JsonResponse
 
 
 def test_success_response_creates_json_response():

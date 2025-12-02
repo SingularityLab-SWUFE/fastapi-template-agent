@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.core.responses.schemas import JsonResponse
+from src.responses import JsonResponse
 
 
 @pytest.mark.parametrize(
