@@ -1,12 +1,11 @@
 import pytest
 
-from src.core.responses.factory import success_response, error_response
 from src.core.responses.schemas import JsonResponse
 
 
 def test_success_response_creates_json_response():
     data = {"result": "success"}
-    response = success_response(data)
+    response = JsonResponse.success(data)
 
     assert isinstance(response, JsonResponse)
     assert response.success is True
@@ -26,14 +25,14 @@ def test_success_response_with_various_types():
     ]
 
     for data in test_cases:
-        response = success_response(data)
+        response = JsonResponse.success(data)
         assert response.data == data
         assert response.success is True
         assert response.code == 200
 
 
 def test_error_response_creates_json_response():
-    response = error_response(40001, "Bad request")
+    response = JsonResponse.error(40001, "Bad request")
 
     assert isinstance(response, JsonResponse)
     assert response.success is False
@@ -53,7 +52,7 @@ def test_error_response_creates_json_response():
     ],
 )
 def test_error_response_with_params(code, msg):
-    response = error_response(code, msg)
+    response = JsonResponse.error(code, msg)
 
     assert response.success is False
     assert response.code == code
@@ -62,13 +61,13 @@ def test_error_response_with_params(code, msg):
 
 def test_error_response_with_special_characters():
     special_msg = "Error: @#$%^&*()[]{}|\\:;\"'<>?,./"
-    response = error_response(50001, special_msg)
+    response = JsonResponse.error(50001, special_msg)
 
     assert response.error == {"code": 50001, "msg": special_msg}
 
 
 def test_success_response_empty_data():
-    response = success_response(None)
+    response = JsonResponse.success(None)
 
     assert response.success is True
     assert response.code == 200
@@ -77,7 +76,7 @@ def test_success_response_empty_data():
 
 
 def test_error_response_empty_message():
-    response = error_response(40001, "")
+    response = JsonResponse.error(40001, "")
 
     assert response.success is False
     assert response.code == 40001
@@ -89,7 +88,7 @@ def test_success_response_with_nested_data():
         "users": [{"id": i, "name": f"user{i}"} for i in range(5)],
         "metadata": {"total": 5, "page": 1},
     }
-    response = success_response(nested_data)
+    response = JsonResponse.success(nested_data)
 
     assert response.data == nested_data
     assert response.success is True
@@ -98,7 +97,7 @@ def test_success_response_with_nested_data():
 def test_error_response_preserves_error_code():
     code = 10001
     msg = "Test error"
-    response = error_response(code, msg)
+    response = JsonResponse.error(code, msg)
 
     assert response.code == code
     assert response.error["code"] == code
