@@ -22,12 +22,9 @@ def load_env_var(env_example_path, monkeypatch):
     guranteed by pydantic settings.
     """
     import dotenv
-    from src.core.config import settings as global_settings
 
     dotenv.load_dotenv(dotenv_path=env_example_path)
     monkeypatch.setenv("APP__NAME", "Test App Loading env var")
-
-    global_settings.reset()
 
 
 def test_settings_created_by_env_file(env_example_path):
