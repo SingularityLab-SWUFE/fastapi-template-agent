@@ -292,3 +292,4 @@ k8s/secret.yaml
 
 # Database
 *.db
+AGENTS.md
