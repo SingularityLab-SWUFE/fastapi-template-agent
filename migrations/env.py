@@ -6,12 +6,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 from alembic import context
-from src.core.config import settings
+from src.core.config import get_settings
 
 from src.core.schemas import *  # noqa: F403
 
 config = context.config
 
+# Get settings before setting URL
+settings = get_settings()
 config.set_main_option("sqlalchemy.url", settings.db.url)
 
 if config.config_file_name is not None:

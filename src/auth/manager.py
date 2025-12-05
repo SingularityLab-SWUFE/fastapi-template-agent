@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
 
-from src.core.config import settings
+from src.core.config import get_settings
 from src.core.schemas import User
 
 from fastapi_users.db import SQLAlchemyUserDatabase
@@ -20,8 +20,22 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    reset_password_token_secret = settings.auth.jwt_secret
-    verification_token_secret = settings.auth.jwt_secret
+    def __init__(self, user_db):
+        super().__init__(user_db)
+        self._settings = None
+
+    def _get_settings(self):
+        if self._settings is None:
+            self._settings = get_settings()
+        return self._settings
+
+    @property
+    def reset_password_token_secret(self):
+        return self._get_settings().auth.jwt_secret
+
+    @property
+    def verification_token_secret(self):
+        return self._get_settings().auth.jwt_secret
 
     async def on_after_register(
         self, user: User, request: Request | None = None

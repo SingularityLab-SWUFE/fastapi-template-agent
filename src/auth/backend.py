@@ -12,11 +12,11 @@ from fastapi_users.authentication import (
 )
 
 from src.cache import CacheProtocol, get_cache
-from src.core.config import settings
+from src.core.config import get_settings
 from src.core.schemas import redis_keys
 
 
-def get_jwt_strategy() -> JWTStrategy:
+def get_jwt_strategy(settings=Depends(get_settings)) -> JWTStrategy:
     return JWTStrategy(
         secret=settings.auth.jwt_secret,
         algorithm=settings.auth.jwt_algorithm,
@@ -35,6 +35,13 @@ class RefreshTokenManager:
 
     def __init__(self, cache: CacheProtocol):
         self._cache = cache
+        # Lazy-load settings only when needed
+        self._settings = None
+
+    def _get_settings(self):
+        if self._settings is None:
+            self._settings = get_settings()
+        return self._settings
 
     async def create_refresh_token(
         self, user_id: int, device_info: str | None = None
@@ -56,7 +63,7 @@ class RefreshTokenManager:
         await self._cache.set(
             redis_keys.refresh_token(token_hash=token_hash),
             value,
-            ttl=settings.auth.refresh_token_lifetime_seconds,
+            ttl=self._get_settings().auth.refresh_token_lifetime_seconds,
         )
         return token
 
@@ -92,7 +99,7 @@ class RefreshTokenManager:
         await self._cache.set(
             redis_keys.user_revoked(user_id=user_id),
             revoke_time,
-            ttl=settings.auth.refresh_token_lifetime_seconds,
+            ttl=self._get_settings().auth.refresh_token_lifetime_seconds,
         )
 
 
