@@ -47,6 +47,7 @@ def test_settings_loading_env_variables():
     """
     from src.core.config import get_settings
 
+    get_settings.cache_clear()
     settings = get_settings()
     assert settings.app.name == "Test App Loading env var"
     assert settings.db.host == "localhost"

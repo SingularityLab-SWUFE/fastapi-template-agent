@@ -12,7 +12,7 @@ from fastapi_users.authentication import (
 )
 
 from src.cache import CacheProtocol, get_cache
-from src.core.config import get_settings
+from src.core.config import Settings, get_settings
 from src.core.schemas import redis_keys
 
 
@@ -33,15 +33,9 @@ class RefreshTokenManager:
     3. JWT (access token) remains stateless.
     """
 
-    def __init__(self, cache: CacheProtocol):
+    def __init__(self, cache: CacheProtocol, settings: Settings):
         self._cache = cache
-        # Lazy-load settings only when needed
-        self._settings = None
-
-    def _get_settings(self):
-        if self._settings is None:
-            self._settings = get_settings()
-        return self._settings
+        self.settings = settings
 
     async def create_refresh_token(
         self, user_id: int, device_info: str | None = None
@@ -63,7 +57,7 @@ class RefreshTokenManager:
         await self._cache.set(
             redis_keys.refresh_token(token_hash=token_hash),
             value,
-            ttl=self._get_settings().auth.refresh_token_lifetime_seconds,
+            ttl=self.settings.auth.refresh_token_lifetime_seconds,
         )
         return token
 
@@ -99,14 +93,15 @@ class RefreshTokenManager:
         await self._cache.set(
             redis_keys.user_revoked(user_id=user_id),
             revoke_time,
-            ttl=self._get_settings().auth.refresh_token_lifetime_seconds,
+            ttl=self.settings.auth.refresh_token_lifetime_seconds,
         )
 
 
 def get_refresh_token_manager(
     cache: CacheProtocol = Depends(get_cache),
+    settings: Settings = Depends(get_settings),
 ) -> RefreshTokenManager:
-    return RefreshTokenManager(cache)
+    return RefreshTokenManager(cache, settings)
 
 
 bearer_transport = BearerTransport(tokenUrl="/auth/jwt/login")
