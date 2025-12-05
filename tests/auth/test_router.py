@@ -109,14 +109,16 @@ async def test_refresh_token_inactive_user(test_client, test_user, test_db):
 
 async def test_reset_password_revokes_tokens(test_client, test_user, local_cache):
     from src.auth.backend import RefreshTokenManager
+    from src.core.config import get_settings
 
+    settings = get_settings()
     login_response = await test_client.post(
         "/auth/jwt/login",
         data={"username": "test@example.com", "password": "testpassword123"},
     )
     refresh_token = login_response.json()["refresh_token"]
 
-    refresh_manager = RefreshTokenManager(local_cache)
+    refresh_manager = RefreshTokenManager(local_cache, settings)
     await refresh_manager.revoke_all_user_tokens(test_user.id)
 
     response = await test_client.post(
