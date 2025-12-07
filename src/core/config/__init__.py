@@ -1,6 +1,12 @@
+from functools import lru_cache
+
 from .settings import Settings
 
-settings = Settings()
-"""Overall application settings instance, configured via environment variables."""
 
-__all__ = ["settings"]
+@lru_cache()
+def get_settings() -> Settings:
+    """Get settings instance via dependency injection."""
+    return Settings()
+
+
+__all__ = ["get_settings"]

@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
 
-from src.core.config import settings
+from src.core.config import Settings, get_settings
 from src.core.schemas import User
 
 from fastapi_users.db import SQLAlchemyUserDatabase
@@ -20,8 +20,17 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    reset_password_token_secret = settings.auth.jwt_secret
-    verification_token_secret = settings.auth.jwt_secret
+    def __init__(self, user_db, settings: Settings):
+        super().__init__(user_db)
+        self.settings = settings
+
+    @property
+    def reset_password_token_secret(self):
+        return self.settings.auth.jwt_secret
+
+    @property
+    def verification_token_secret(self):
+        return self.settings.auth.jwt_secret
 
     async def on_after_register(
         self, user: User, request: Request | None = None
@@ -40,11 +49,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
         from .backend import RefreshTokenManager
 
-        refresh_manager = RefreshTokenManager(cache)
+        refresh_manager = RefreshTokenManager(cache, self.settings)
         await refresh_manager.revoke_all_user_tokens(user.id)
 
 
 async def get_user_manager(
     user_db=Depends(get_user_db),
+    settings: Settings = Depends(get_settings),
 ) -> AsyncGenerator[UserManager, None]:
-    yield UserManager(user_db)
+    yield UserManager(user_db, settings)

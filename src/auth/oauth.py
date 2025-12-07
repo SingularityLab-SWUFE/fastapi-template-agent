@@ -2,13 +2,15 @@ from fastapi import APIRouter
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
 
-from src.core.config import settings
+from src.core.config import get_settings
 
 from . import fastapi_users
 from .backend import auth_backend
 
 oauth_router = APIRouter()
 
+# Initialize OAuth clients once when module is imported
+settings = get_settings()
 
 if settings.auth.oauth_google_client_id and settings.auth.oauth_google_client_secret:
     google_oauth_client = GoogleOAuth2(

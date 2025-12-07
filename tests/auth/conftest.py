@@ -11,6 +11,13 @@ from src.session import get_session
 
 
 @pytest.fixture
+def settings():
+    from src.core.config import get_settings
+
+    return get_settings()
+
+
+@pytest.fixture
 async def local_cache():
     cache = LocalCache()
     yield cache
