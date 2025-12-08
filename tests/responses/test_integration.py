@@ -191,3 +191,27 @@ async def test_middleware_preserves_custom_headers():
         assert response.status_code == 200
         assert "X-Custom-Header" in response.headers
         assert response.headers["X-Custom-Header"] == "custom-value"
+
+
+async def test_middleware_handles_business_exception():
+    """Test middleware wraps BusinessException responses."""
+    from src.exception_handlers import register_business_exception_handler
+    from src.exceptions import BusinessException
+    from src.responses import ResponseWrapperMiddleware
+
+    app = FastAPI()
+    app.add_middleware(ResponseWrapperMiddleware)
+    register_business_exception_handler(app)
+
+    @app.get("/api/business-error")
+    async def business_error():
+        raise BusinessException(code=1001, msg="Domain failure")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/business-error")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_success"] is False
+        assert data["code"] == 1001
+        assert data["msg"] == "Domain failure"

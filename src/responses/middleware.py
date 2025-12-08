@@ -47,7 +47,8 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             new_payload = Response.success(code=api_response.status_code, data=payload).model_dump()
         else:
             error_msg = self._extract_error_msg(payload)
-            new_payload = Response.error(code=api_response.status_code, msg=error_msg, data=payload).model_dump()
+            error_code = self._extract_error_code(payload, api_response.status_code)
+            new_payload = Response.error(code=error_code, msg=error_msg, data=payload).model_dump()
 
         unified = JSONResponse(
             content=new_payload,
@@ -99,3 +100,11 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             return json.dumps(payload, ensure_ascii=False)
 
         return "error"
+
+    @staticmethod
+    def _extract_error_code(payload: Any, default_code: int) -> int:
+        if isinstance(payload, dict):
+            candidate = payload.get("code")
+            if isinstance(candidate, int):
+                return candidate
+        return default_code

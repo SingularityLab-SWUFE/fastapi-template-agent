@@ -1,11 +1,12 @@
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
 from src.auth.oauth import oauth_router
 from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
 from src.core.config import get_settings
+from src.exception_handlers import register_business_exception_handler
 
 from .session import close_db, init_db
 
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
         debug=settings.app.debug,
         lifespan=lifespan,
     )
+    register_business_exception_handler(app)
 
     app.include_router(auth_router, prefix="/auth", tags=["auth"])
     app.include_router(oauth_router, prefix="/auth", tags=["auth"])

@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
+
+from src.exceptions import BusinessException
 
 from . import fastapi_users
 from .backend import RefreshTokenManager, get_jwt_strategy, get_refresh_token_manager
@@ -50,7 +52,7 @@ async def login(
 ) -> TokenResponse:
     user = await user_manager.authenticate(credentials)
     if not user or not user.is_active:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise BusinessException(code=400, msg="Invalid credentials")
 
     access_token = await strategy.write_token(user)
 
@@ -74,11 +76,11 @@ async def refresh_jwt(
     user_id = await refresh_manager.verify_refresh_token(refresh_token)
 
     if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        raise BusinessException(code=401, msg="Invalid refresh token")
 
     user = await user_manager.get(user_id)
     if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail="User not found or inactive")
+        raise BusinessException(code=401, msg="User not found or inactive")
 
     access_token = await strategy.write_token(user)
 
