@@ -75,8 +75,8 @@ async def test_middleware_skips_docs_paths():
         assert response.status_code == 200
 
 
-async def test_middleware_leaves_already_unified_response():
-    """Test middleware doesn't double-wrap already unified responses."""
+async def test_middleware_leaves_already_wrapped_response():
+    """Test middleware doesn't double-wrap already wrapped responses."""
     from src.responses import ResponseWrapperMiddleware
     from src.responses.base import Response
 

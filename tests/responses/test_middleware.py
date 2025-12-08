@@ -59,24 +59,24 @@ def test_should_not_skip_api_paths():
     assert middleware._should_skip(request, response) is False
 
 
-def test_is_already_unified_with_valid_response():
-    """Test detection of already unified response."""
+def test_is_already_wrapped_with_valid_response():
+    """Test detection of already wrapped response."""
     from src.responses.middleware import ResponseWrapperMiddleware
 
     middleware = ResponseWrapperMiddleware(app=MagicMock())
 
-    valid_unified = {
+    valid_wrapped = {
         "code": 200,
         "msg": "success",
         "data": {"key": "value"},
         "is_success": True,
     }
 
-    assert middleware._is_already_unified(valid_unified) is True
+    assert middleware._is_already_wrapped(valid_wrapped) is True
 
 
-def test_is_already_unified_with_invalid_response():
-    """Test detection of invalid unified response."""
+def test_is_already_wrapped_with_invalid_response():
+    """Test detection of invalid wrapped response."""
     from src.responses.middleware import ResponseWrapperMiddleware
 
     middleware = ResponseWrapperMiddleware(app=MagicMock())
@@ -85,13 +85,13 @@ def test_is_already_unified_with_invalid_response():
         {"code": 200, "msg": "success"},  # Missing fields
         {"code": 200, "msg": "success", "data": {}},  # Missing is_success field
         {"code": 200, "msg": "success", "data": {}, "is_success": "true"},  # Wrong type
-        {"not_unified": "response"},  # Different structure
+        {"not_wrapped": "response"},  # Different structure
         "string response",  # Not a dict
         None,  # None response
     ]
 
     for invalid in invalid_responses:
-        assert middleware._is_already_unified(invalid) is False, f"Should reject: {invalid}"
+        assert middleware._is_already_wrapped(invalid) is False, f"Should reject: {invalid}"
 
 
 def test_extract_error_msg_from_dict_with_detail():

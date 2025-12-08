@@ -41,7 +41,7 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             except (json.JSONDecodeError, UnicodeDecodeError):
                 return api_response
 
-        if self._is_already_unified(payload):
+        if self._is_already_wrapped(payload):
             new_payload = payload
         elif 200 <= api_response.status_code < 400:
             new_payload = Response.success(code=api_response.status_code, data=payload).model_dump()
@@ -70,7 +70,7 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
         return False
 
     @staticmethod
-    def _is_already_unified(payload: Any) -> bool:
+    def _is_already_wrapped(payload: Any) -> bool:
         if not isinstance(payload, dict):
             return False
 
