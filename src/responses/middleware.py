@@ -12,7 +12,7 @@ from starlette.types import ASGIApp
 from .base import Response
 
 
-class UnifiedResponseMiddleware(BaseHTTPMiddleware):
+class ResponseWrapperMiddleware(BaseHTTPMiddleware):
     """Wrap application JSON outputs into the unified Response[T] envelope."""
 
     DOC_PATH_PREFIXES = ("/docs", "/redoc")
@@ -54,8 +54,8 @@ class UnifiedResponseMiddleware(BaseHTTPMiddleware):
             status_code=200,
             media_type=api_response.media_type,
             background=api_response.background,
+            headers=dict(api_response.headers),
         )
-        self._copy_headers(api_response, unified)
         return unified
 
     def _should_skip(self, request: Request, response: FastAPIResponse) -> bool:
@@ -65,9 +65,6 @@ class UnifiedResponseMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
         if path in self.DOC_PATHS or any(path.startswith(prefix) for prefix in self.DOC_PATH_PREFIXES):
-            return True
-
-        if path == "/openapi.json":
             return True
 
         return False
@@ -102,14 +99,3 @@ class UnifiedResponseMiddleware(BaseHTTPMiddleware):
             return json.dumps(payload, ensure_ascii=False)
 
         return "error"
-
-    @staticmethod
-    def _copy_headers(source: FastAPIResponse, target: JSONResponse) -> None:
-        skip_headers = {"content-length"}
-        for key, value in source.headers.items():
-            if key.lower() in skip_headers or key.lower() == "set-cookie":
-                continue
-            target.headers[key] = value
-
-        for cookie in source.headers.getlist("set-cookie"):
-            target.headers.append("set-cookie", cookie)

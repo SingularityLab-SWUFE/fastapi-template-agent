@@ -6,10 +6,10 @@ from fastapi import FastAPI
 
 async def test_middleware_wraps_success_response():
     """Test middleware wraps successful JSON response."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/success")
     async def success_endpoint():
@@ -30,11 +30,11 @@ async def test_middleware_wraps_success_response():
 
 async def test_middleware_wraps_error_response():
     """Test middleware wraps error JSON response."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
     from fastapi import HTTPException
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/error")
     async def error_endpoint():
@@ -55,10 +55,10 @@ async def test_middleware_wraps_error_response():
 
 async def test_middleware_skips_docs_paths():
     """Test middleware skips documentation paths."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/test")
     async def test_endpoint():
@@ -77,11 +77,11 @@ async def test_middleware_skips_docs_paths():
 
 async def test_middleware_leaves_already_unified_response():
     """Test middleware doesn't double-wrap already unified responses."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
     from src.responses.base import Response
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/already-unified")
     async def already_unified_endpoint():
@@ -105,10 +105,10 @@ async def test_middleware_leaves_already_unified_response():
 
 async def test_middleware_with_empty_response():
     """Test middleware handles empty JSON response."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/empty")
     async def empty_endpoint():
@@ -126,10 +126,10 @@ async def test_middleware_with_empty_response():
 
 async def test_middleware_with_list_response():
     """Test middleware wraps list response."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/list")
     async def list_endpoint():
@@ -146,11 +146,11 @@ async def test_middleware_with_list_response():
 
 async def test_middleware_with_validation_error():
     """Test middleware wraps validation error."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
     from pydantic import BaseModel
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     class Item(BaseModel):
         name: str
@@ -172,11 +172,11 @@ async def test_middleware_with_validation_error():
 
 async def test_middleware_preserves_custom_headers():
     """Test middleware preserves custom headers in response."""
-    from src.responses import UnifiedResponseMiddleware
+    from src.responses import ResponseWrapperMiddleware
     from fastapi.responses import JSONResponse
 
     app = FastAPI()
-    app.add_middleware(UnifiedResponseMiddleware)
+    app.add_middleware(ResponseWrapperMiddleware)
 
     @app.get("/api/with-headers")
     async def with_headers_endpoint():

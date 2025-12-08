@@ -1,4 +1,4 @@
 from .base import Response
-from .middleware import UnifiedResponseMiddleware
+from .middleware import ResponseWrapperMiddleware
 
-__all__ = ["Response", "UnifiedResponseMiddleware"]
+__all__ = ["Response", "ResponseWrapperMiddleware"]
