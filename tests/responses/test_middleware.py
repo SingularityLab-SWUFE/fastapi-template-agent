@@ -173,3 +173,42 @@ def test_extract_error_msg_from_unknown_type():
     middleware = ResponseWrapperMiddleware(app=MagicMock())
 
     assert middleware._extract_error_msg(123) == "error"
+
+
+def test_extract_error_code_from_dict():
+    """Test extracting error code from dict payload."""
+    from src.responses.middleware import ResponseWrapperMiddleware
+
+    middleware = ResponseWrapperMiddleware(app=MagicMock())
+
+    payload = {"code": 1001}
+    assert middleware._extract_error_code(payload, 400) == 1001
+
+
+def test_extract_error_code_from_dict_with_non_int():
+    """Test error code extraction when code is not integer."""
+    from src.responses.middleware import ResponseWrapperMiddleware
+
+    middleware = ResponseWrapperMiddleware(app=MagicMock())
+
+    payload = {"code": "1001"}
+    assert middleware._extract_error_code(payload, 400) == 400
+
+
+def test_extract_error_code_from_dict_missing_code():
+    """Test error code extraction when code field missing."""
+    from src.responses.middleware import ResponseWrapperMiddleware
+
+    middleware = ResponseWrapperMiddleware(app=MagicMock())
+
+    payload = {"detail": "error"}
+    assert middleware._extract_error_code(payload, 400) == 400
+
+
+def test_extract_error_code_from_non_dict_payload():
+    """Test error code extraction from non-dictionary payload."""
+    from src.responses.middleware import ResponseWrapperMiddleware
+
+    middleware = ResponseWrapperMiddleware(app=MagicMock())
+
+    assert middleware._extract_error_code(["error"], 400) == 400
