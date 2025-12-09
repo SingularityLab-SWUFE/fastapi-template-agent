@@ -10,7 +10,6 @@ def test_response_success_with_data():
     assert response.code == 200
     assert response.msg == "Success!"
     assert response.data == {"key": "value"}
-    assert response.is_success is True
 
 
 def test_response_success_without_data():
@@ -22,7 +21,6 @@ def test_response_success_without_data():
     assert response.code == 200
     assert response.msg == "success"
     assert response.data is None
-    assert response.is_success is True
 
 
 def test_response_success_with_custom_code():
@@ -34,7 +32,6 @@ def test_response_success_with_custom_code():
     assert response.code == 201
     assert response.msg == "Created"
     assert response.data is None
-    assert response.is_success is True
 
 
 def test_response_error():
@@ -46,7 +43,6 @@ def test_response_error():
     assert response.code == 400
     assert response.msg == "Bad request"
     assert response.data == {"error": "detail"}
-    assert response.is_success is False
 
 
 def test_response_error_minimal():
@@ -58,7 +54,6 @@ def test_response_error_minimal():
     assert response.code == 500
     assert response.msg == "Internal server error"
     assert response.data is None
-    assert response.is_success is False
 
 
 def test_response_model_dump():
@@ -72,7 +67,6 @@ def test_response_model_dump():
         "code": 200,
         "msg": "OK",
         "data": {"test": "data"},
-        "is_success": True,
     }
 
 

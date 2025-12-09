@@ -11,7 +11,6 @@ class Response(BaseModel, Generic[T]):
     code: int
     msg: str
     data: T | None = None
-    is_success: bool
 
     @classmethod
     def success(
@@ -20,7 +19,7 @@ class Response(BaseModel, Generic[T]):
         msg: str = "success",
         code: int = 200,
     ) -> "Response[T]":
-        return cls(code=code, msg=msg, data=data, is_success=True)
+        return cls(code=code, msg=msg, data=data)
 
     @classmethod
     def error(
@@ -29,4 +28,4 @@ class Response(BaseModel, Generic[T]):
         msg: str,
         data: T | None = None,
     ) -> "Response[T]":
-        return cls(code=code, msg=msg, data=data, is_success=False)
+        return cls(code=code, msg=msg, data=data)

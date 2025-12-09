@@ -17,6 +17,7 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 
     DOC_PATH_PREFIXES = ("/docs", "/redoc")
     DOC_PATHS = {"/openapi.json", "/docs/oauth2-redirect"}
+    SKIP_PATHS = {"/auth/jwt/login", "/auth/jwt/refresh", "/auth/jwt/logout"}
 
     def __init__(self, app: ASGIApp):
         super().__init__(app)
@@ -43,16 +44,19 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 
         if self._is_already_wrapped(payload):
             new_payload = payload
+            status_code = api_response.status_code
         elif 200 <= api_response.status_code < 400:
             new_payload = Response.success(code=api_response.status_code, data=payload).model_dump()
+            status_code = 200
         else:
             error_msg = self._extract_error_msg(payload)
             error_code = self._extract_error_code(payload, api_response.status_code)
             new_payload = Response.error(code=error_code, msg=error_msg, data=payload).model_dump()
+            status_code = api_response.status_code
 
         unified = JSONResponse(
             content=new_payload,
-            status_code=200,
+            status_code=status_code,
             media_type=api_response.media_type,
             background=api_response.background,
             headers=dict(api_response.headers),
@@ -68,6 +72,9 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
         if path in self.DOC_PATHS or any(path.startswith(prefix) for prefix in self.DOC_PATH_PREFIXES):
             return True
 
+        if path in self.SKIP_PATHS:
+            return True
+
         return False
 
     @staticmethod
@@ -75,11 +82,11 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
         if not isinstance(payload, dict):
             return False
 
-        required = {"code", "msg", "data", "is_success"}
+        required = {"code", "msg", "data"}
         if not required.issubset(payload.keys()):
             return False
 
-        return isinstance(payload["is_success"], bool)
+        return True
 
     @staticmethod
     def _extract_error_msg(payload: Any) -> str:

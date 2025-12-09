@@ -23,8 +23,6 @@ async def test_middleware_wraps_success_response():
         assert "code" in data
         assert "msg" in data
         assert "data" in data
-        assert "is_success" in data
-        assert data["is_success"] is True
         assert data["data"] == {"message": "success", "data": {"key": "value"}}
 
 
@@ -43,13 +41,11 @@ async def test_middleware_wraps_error_response():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/api/error")
 
-        assert response.status_code == 200
+        assert response.status_code == 400
         data = response.json()
         assert "code" in data
         assert "msg" in data
         assert "data" in data
-        assert "is_success" in data
-        assert data["is_success"] is False
         assert "Bad request" in data["msg"]
 
 
@@ -92,15 +88,13 @@ async def test_middleware_leaves_already_wrapped_response():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["is_success"] is True
         assert data["code"] == 200
         assert data["msg"] == "success"
         assert data["data"] == {"test": "data"}
-        assert len(data) == 4
+        assert len(data) == 3
         assert "code" in data and data["code"] == 200
         assert "msg" in data and data["msg"] == "success"
         assert "data" in data and data["data"] == {"test": "data"}
-        assert "is_success" in data and data["is_success"] is True
 
 
 async def test_middleware_with_empty_response():
@@ -119,7 +113,6 @@ async def test_middleware_with_empty_response():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["is_success"] is True
         assert data["code"] == 200
         assert data["data"] == {}
 
@@ -140,7 +133,6 @@ async def test_middleware_with_list_response():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["is_success"] is True
         assert data["data"] == [{"id": 1}, {"id": 2}]
 
 
@@ -163,9 +155,8 @@ async def test_middleware_with_validation_error():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/api/item", json={"name": "test"})
 
-        assert response.status_code == 200
+        assert response.status_code == 422
         data = response.json()
-        assert data["is_success"] is False
         assert "msg" in data
         assert data["code"] == 422
 
@@ -195,23 +186,22 @@ async def test_middleware_preserves_custom_headers():
 
 async def test_middleware_handles_business_exception():
     """Test middleware wraps BusinessException responses."""
-    from src.exception_handlers import register_business_exception_handler
+    from src.handlers import register_exception_handlers
     from src.exceptions import BusinessException
     from src.responses import ResponseWrapperMiddleware
 
     app = FastAPI()
     app.add_middleware(ResponseWrapperMiddleware)
-    register_business_exception_handler(app)
+    register_exception_handlers(app)
 
     @app.get("/api/business-error")
     async def business_error():
-        raise BusinessException(code=1001, msg="Domain failure")
+        raise BusinessException(http_code=400, business_code=1001, msg="Domain failure")
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/api/business-error")
 
-        assert response.status_code == 200
+        assert response.status_code == 400
         data = response.json()
-        assert data["is_success"] is False
         assert data["code"] == 1001
         assert data["msg"] == "Domain failure"

@@ -26,7 +26,7 @@ async def test_login_invalid_credentials(test_client, test_user):
 
     assert response.status_code == 400
     data = response.json()
-    assert data["detail"] == "Invalid credentials"
+    assert data["msg"] == "Invalid credentials"
     assert data["code"] == 400
 
 
@@ -65,7 +65,7 @@ async def test_refresh_token_invalid(test_client):
 
     assert response.status_code == 401
     data = response.json()
-    assert data["detail"] == "Invalid refresh token"
+    assert data["msg"] == "Invalid refresh token"
     assert data["code"] == 401
 
 
@@ -111,7 +111,7 @@ async def test_refresh_token_inactive_user(test_client, test_user, test_db):
 
     assert response.status_code == 401
     data = response.json()
-    assert data["detail"] == "User not found or inactive"
+    assert data["msg"] == "User not found or inactive"
     assert data["code"] == 401
 
 

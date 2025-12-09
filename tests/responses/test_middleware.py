@@ -69,7 +69,6 @@ def test_is_already_wrapped_with_valid_response():
         "code": 200,
         "msg": "success",
         "data": {"key": "value"},
-        "is_success": True,
     }
 
     assert middleware._is_already_wrapped(valid_wrapped) is True
@@ -82,9 +81,7 @@ def test_is_already_wrapped_with_invalid_response():
     middleware = ResponseWrapperMiddleware(app=MagicMock())
 
     invalid_responses = [
-        {"code": 200, "msg": "success"},  # Missing fields
-        {"code": 200, "msg": "success", "data": {}},  # Missing is_success field
-        {"code": 200, "msg": "success", "data": {}, "is_success": "true"},  # Wrong type
+        {"code": 200, "msg": "success"},  # Missing data field
         {"not_wrapped": "response"},  # Different structure
         "string response",  # Not a dict
         None,  # None response
