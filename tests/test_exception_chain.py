@@ -22,7 +22,7 @@ class TestBusinessExceptionHandler:
         handler = BusinessExceptionHandler()
         request = Request({"type": "http", "method": "GET", "path": "/", "headers": []})
 
-        exc = BusinessException(http_code=422, business_code=422, msg="Invalid input")
+        exc = BusinessException(business_code=422, msg="Invalid input")
         assert handler.can_handle(exc)
 
         response = await handler.handle(request, exc)
@@ -38,7 +38,7 @@ class TestBusinessExceptionHandler:
         handler = BusinessExceptionHandler()
         request = Request({"type": "http", "method": "GET", "path": "/", "headers": []})
 
-        exc = BusinessException(http_code=9999, business_code=9999, msg="Invalid code")
+        exc = BusinessException(business_code=9999, msg="Invalid code")
         response = await handler.handle(request, exc)
 
         assert response.status_code == 400
@@ -48,17 +48,28 @@ class TestBusinessExceptionHandler:
         assert body["msg"] == "Invalid code"
 
     @pytest.mark.asyncio
-    async def test_handles_default_code(self):
+    async def test_handles_mapped_code(self):
         handler = BusinessExceptionHandler()
         request = Request({"type": "http", "method": "GET", "path": "/", "headers": []})
 
-        exc = BusinessException()
+        exc = BusinessException(business_code=401, msg="Unauthorized")
         response = await handler.handle(request, exc)
 
-        assert response.status_code == 400
+        assert response.status_code == 401
         body = json.loads(response.body)
-        assert body["code"] == 400
-        assert body["msg"] == "Business error"
+        assert body["code"] == 401
+        assert body["msg"] == "Unauthorized"
+
+    @pytest.mark.asyncio
+    async def test_handles_exception_with_data(self):
+        handler = BusinessExceptionHandler()
+        request = Request({"type": "http", "method": "GET", "path": "/", "headers": []})
+
+        exc = BusinessException(business_code=422, msg="Validation failed", data={"field": "email"})
+        response = await handler.handle(request, exc)
+
+        body = json.loads(response.body)
+        assert body["data"] == {"field": "email"}
 
     @pytest.mark.asyncio
     async def test_cannot_handle_other_exceptions(self):
@@ -122,7 +133,7 @@ class TestHTTPExceptionHandler:
     async def test_cannot_handle_other_exceptions(self):
         handler = HTTPExceptionHandler()
 
-        assert not handler.can_handle(BusinessException())
+        assert not handler.can_handle(BusinessException(business_code=400, msg="test"))
         assert not handler.can_handle(ValueError("test"))
 
 
@@ -179,7 +190,7 @@ class TestValidationExceptionHandler:
     async def test_cannot_handle_other_exceptions(self):
         handler = ValidationExceptionHandler()
 
-        assert not handler.can_handle(BusinessException())
+        assert not handler.can_handle(BusinessException(business_code=400, msg="test"))
         assert not handler.can_handle(HTTPException(status_code=422, detail="Bad"))
 
 
@@ -218,7 +229,7 @@ class TestFallbackExceptionHandler:
         handler = FallbackExceptionHandler()
 
         assert handler.can_handle(ValueError("test"))
-        assert handler.can_handle(BusinessException())
+        assert handler.can_handle(BusinessException(business_code=400, msg="test"))
         assert handler.can_handle(HTTPException(status_code=404, detail="Not found"))
         assert handler.can_handle(RequestValidationError(errors=[]))
 
@@ -236,7 +247,7 @@ class TestHandlerChain:
         chain = build_exception_chain(handlers)
         request = Request({"type": "http", "method": "GET", "path": "/", "headers": []})
 
-        exc = BusinessException(http_code=400, business_code=400, msg="Business error")
+        exc = BusinessException(business_code=400, msg="Business error")
         response = await chain(request, exc)
 
         assert response.status_code == 400
@@ -341,7 +352,7 @@ class TestIntegration:
 
         @app.get("/test")
         async def test_endpoint():
-            raise BusinessException(http_code=418, business_code=418, msg="I'm a teapot")
+            raise BusinessException(business_code=418, msg="I'm a teapot")
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/test")

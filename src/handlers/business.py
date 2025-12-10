@@ -7,6 +7,18 @@ from src.responses.base import Response
 from .interface import ExceptionHandler
 
 
+BUSINESS_CODE_TO_HTTP_STATUS = {
+    400: 400,
+    401: 401,
+    403: 403,
+    404: 404,
+    409: 409,
+    418: 418,
+    422: 422,
+    500: 500,
+}
+
+
 class BusinessExceptionHandler(ExceptionHandler):
     """Handler for BusinessException with domain-specific error codes.
 
@@ -35,13 +47,12 @@ class BusinessExceptionHandler(ExceptionHandler):
         Returns:
             JSONResponse with the exception's code and message
         """
-        # Validate HTTP status code is within valid range
-        status_code = exc.http_code if 100 <= exc.http_code < 600 else 400
+        status_code = BUSINESS_CODE_TO_HTTP_STATUS.get(exc.business_code, 400)
 
         response = Response.error(
             code=exc.business_code,
             msg=exc.msg,
-            data=None
+            data=exc.data
         )
 
         return JSONResponse(

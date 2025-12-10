@@ -196,7 +196,7 @@ async def test_middleware_handles_business_exception():
 
     @app.get("/api/business-error")
     async def business_error():
-        raise BusinessException(http_code=400, business_code=1001, msg="Domain failure")
+        raise BusinessException(business_code=1001, msg="Domain failure")
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/api/business-error")

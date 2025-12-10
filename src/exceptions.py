@@ -1,22 +1,22 @@
 class BusinessException(Exception):
     """
-    Business domain exception with separate HTTP status code and business error code.
+    Business domain exception with business error code.
 
     Args:
-        http_code: HTTP status code for the response (e.g., 400, 401, 403, 404).
         business_code: Application-specific business error code for client logic.
         msg: Human readable description of the business rule violation.
+        data: Additional data to include in the error response.
     """
 
     def __init__(
         self,
-        http_code: int = 400,
-        business_code: int | None = None,
-        msg: str = "Business error"
+        business_code: int,
+        msg: str,
+        data: object | None = None
     ):
-        self.http_code = http_code
-        self.business_code = business_code if business_code is not None else http_code
+        self.business_code = business_code
         self.msg = msg
+        self.data = data
         super().__init__(msg)
 
     def __str__(self) -> str:
