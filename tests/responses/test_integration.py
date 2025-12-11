@@ -15,7 +15,9 @@ async def test_middleware_wraps_success_response():
     async def success_endpoint():
         return {"message": "success", "data": {"key": "value"}}
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/success")
 
         assert response.status_code == 200
@@ -38,7 +40,9 @@ async def test_middleware_wraps_error_response():
     async def error_endpoint():
         raise HTTPException(status_code=400, detail="Bad request")
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/error")
 
         assert response.status_code == 400
@@ -60,7 +64,9 @@ async def test_middleware_skips_docs_paths():
     async def test_endpoint():
         return {"data": "test"}
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/docs")
         assert response.status_code == 200
 
@@ -83,7 +89,9 @@ async def test_middleware_leaves_already_wrapped_response():
     async def already_unified_endpoint():
         return Response.success(data={"test": "data"}).model_dump()
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/already-unified")
 
         assert response.status_code == 200
@@ -108,7 +116,9 @@ async def test_middleware_with_empty_response():
     async def empty_endpoint():
         return {}
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/empty")
 
         assert response.status_code == 200
@@ -128,7 +138,9 @@ async def test_middleware_with_list_response():
     async def list_endpoint():
         return [{"id": 1}, {"id": 2}]
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/list")
 
         assert response.status_code == 200
@@ -152,7 +164,9 @@ async def test_middleware_with_validation_error():
     async def create_item(item: Item):
         return item
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.post("/api/item", json={"name": "test"})
 
         assert response.status_code == 422
@@ -176,7 +190,9 @@ async def test_middleware_preserves_custom_headers():
             headers={"X-Custom-Header": "custom-value"},
         )
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/with-headers")
 
         assert response.status_code == 200
@@ -187,7 +203,7 @@ async def test_middleware_preserves_custom_headers():
 async def test_middleware_handles_business_exception():
     """Test middleware wraps BusinessException responses."""
     from src.handlers import register_exception_handlers
-    from src.exceptions import BusinessException
+    from src.exceptions import BusinessException, ErrorCode
     from src.responses import ResponseWrapperMiddleware
 
     app = FastAPI()
@@ -196,12 +212,14 @@ async def test_middleware_handles_business_exception():
 
     @app.get("/api/business-error")
     async def business_error():
-        raise BusinessException(business_code=1001, msg="Domain failure")
+        raise BusinessException(ErrorCode.BIZ_ORDER_EXPIRED, "Domain failure")
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/api/business-error")
 
-        assert response.status_code == 400
+        assert response.status_code == 410
         data = response.json()
-        assert data["code"] == 1001
+        assert data["code"] == ErrorCode.BIZ_ORDER_EXPIRED
         assert data["msg"] == "Domain failure"

@@ -46,12 +46,16 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             new_payload = payload
             status_code = api_response.status_code
         elif 200 <= api_response.status_code < 400:
-            new_payload = Response.success(code=api_response.status_code, data=payload).model_dump()
+            new_payload = Response.success(
+                code=api_response.status_code, data=payload
+            ).model_dump()
             status_code = 200
         else:
             error_msg = self._extract_error_msg(payload)
             error_code = self._extract_error_code(payload, api_response.status_code)
-            new_payload = Response.error(code=error_code, msg=error_msg, data=payload).model_dump()
+            new_payload = Response.error(
+                code=error_code, msg=error_msg, data=payload
+            ).model_dump()
             status_code = api_response.status_code
 
         unified = JSONResponse(
@@ -69,7 +73,9 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             return True
 
         path = request.url.path
-        if path in self.DOC_PATHS or any(path.startswith(prefix) for prefix in self.DOC_PATH_PREFIXES):
+        if path in self.DOC_PATHS or any(
+            path.startswith(prefix) for prefix in self.DOC_PATH_PREFIXES
+        ):
             return True
 
         if path in self.SKIP_PATHS:
@@ -97,7 +103,9 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             return payload
 
         if isinstance(payload, dict):
-            detail = payload.get("detail") or payload.get("msg") or payload.get("message")
+            detail = (
+                payload.get("detail") or payload.get("msg") or payload.get("message")
+            )
             if isinstance(detail, str):
                 return detail
             if detail is not None:
