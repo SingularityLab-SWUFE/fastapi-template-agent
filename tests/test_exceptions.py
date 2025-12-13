@@ -1,39 +1,42 @@
-from src.exceptions import BusinessException
+from src.exceptions import BusinessException, ErrorCode, InvalidPasswordException
 
 
-def test_business_exception_required_params():
-    exc = BusinessException(business_code=400, msg="Business error")
+def test_business_exception_with_error_code():
+    exc = BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Invalid credentials")
 
-    assert exc.business_code == 400
-    assert exc.msg == "Business error"
+    assert exc.code == ErrorCode.AUTH_INVALID_CREDENTIALS
+    assert exc.msg == "Invalid credentials"
     assert exc.data is None
-    assert str(exc) == "[400] Business error"
+    assert str(exc) == "[10001] Invalid credentials"
 
 
-def test_business_exception_custom_values():
-    exc = BusinessException(business_code=422, msg="Invalid input", data={"field": "email"})
-
-    assert exc.business_code == 422
-    assert exc.msg == "Invalid input"
-    assert exc.data == {"field": "email"}
-    assert str(exc) == "[422] Invalid input"
-
-
-def test_business_exception_with_different_codes():
-    exc = BusinessException(business_code=1001, msg="Business rule violated")
-
-    assert exc.business_code == 1001
-    assert exc.msg == "Business rule violated"
-    assert str(exc) == "[1001] Business rule violated"
-
-
-def test_business_exception_with_additional_data():
+def test_business_exception_with_data():
     exc = BusinessException(
-        business_code=400,
-        msg="Validation failed",
-        data={"errors": ["Email required", "Password too short"]}
+        ErrorCode.BIZ_INSUFFICIENT_BALANCE,
+        "Insufficient balance",
+        data={"balance": 100, "required": 200},
     )
 
-    assert exc.business_code == 400
-    assert exc.msg == "Validation failed"
-    assert exc.data == {"errors": ["Email required", "Password too short"]}
+    assert exc.code == ErrorCode.BIZ_INSUFFICIENT_BALANCE
+    assert exc.msg == "Insufficient balance"
+    assert exc.data == {"balance": 100, "required": 200}
+    assert str(exc) == "[50001] Insufficient balance"
+
+
+def test_business_exception_different_error_codes():
+    exc1 = BusinessException(ErrorCode.USER_NOT_FOUND, "User not found")
+    exc2 = BusinessException(ErrorCode.PERM_INSUFFICIENT, "Permission denied")
+
+    assert exc1.code == ErrorCode.USER_NOT_FOUND
+    assert exc2.code == ErrorCode.PERM_INSUFFICIENT
+    assert str(exc1) == "[20001] User not found"
+    assert str(exc2) == "[30001] Permission denied"
+
+
+def test_domain_exception():
+    exc = InvalidPasswordException(remaining_attempts=3)
+
+    assert exc.code == ErrorCode.AUTH_INVALID_PASSWORD
+    assert exc.msg == "Invalid password, 3 attempts remaining"
+    assert exc.data == {"remaining_attempts": 3}
+    assert str(exc) == "[10002] Invalid password, 3 attempts remaining"
