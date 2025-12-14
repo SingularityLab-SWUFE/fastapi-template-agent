@@ -1,59 +1,58 @@
-"""Test unified response model."""
+import pytest
 
 
-def test_response_success_with_data():
-    """Test Response.success() factory method with data."""
+@pytest.mark.parametrize(
+    "factory_kwargs,expected_code,expected_msg,expected_data",
+    [
+        (
+            {"data": {"key": "value"}, "msg": "Success!", "code": 200},
+            200,
+            "Success!",
+            {"key": "value"},
+        ),
+        ({}, 200, "success", None),
+        ({"code": 201, "msg": "Created"}, 201, "Created", None),
+    ],
+)
+def test_response_success_factory_sets_fields(
+    factory_kwargs, expected_code, expected_msg, expected_data
+):
     from src.responses.base import Response
 
-    response = Response.success(data={"key": "value"}, msg="Success!", code=200)
+    response = Response.success(**factory_kwargs)
 
-    assert response.code == 200
-    assert response.msg == "Success!"
-    assert response.data == {"key": "value"}
+    assert response.code == expected_code
+    assert response.msg == expected_msg
+    assert response.data == expected_data
 
 
-def test_response_success_without_data():
-    """Test Response.success() factory method without data."""
+@pytest.mark.parametrize(
+    "factory_kwargs,expected_code,expected_msg,expected_data",
+    [
+        (
+            {"code": 400, "msg": "Bad request", "data": {"error": "detail"}},
+            400,
+            "Bad request",
+            {"error": "detail"},
+        ),
+        (
+            {"code": 500, "msg": "Internal server error"},
+            500,
+            "Internal server error",
+            None,
+        ),
+    ],
+)
+def test_response_error_factory_sets_fields(
+    factory_kwargs, expected_code, expected_msg, expected_data
+):
     from src.responses.base import Response
 
-    response = Response.success()
+    response = Response.error(**factory_kwargs)
 
-    assert response.code == 200
-    assert response.msg == "success"
-    assert response.data is None
-
-
-def test_response_success_with_custom_code():
-    """Test Response.success() factory method with custom status code."""
-    from src.responses.base import Response
-
-    response = Response.success(code=201, msg="Created")
-
-    assert response.code == 201
-    assert response.msg == "Created"
-    assert response.data is None
-
-
-def test_response_error():
-    """Test Response.error() factory method."""
-    from src.responses.base import Response
-
-    response = Response.error(code=400, msg="Bad request", data={"error": "detail"})
-
-    assert response.code == 400
-    assert response.msg == "Bad request"
-    assert response.data == {"error": "detail"}
-
-
-def test_response_error_minimal():
-    """Test Response.error() factory method with minimal params."""
-    from src.responses.base import Response
-
-    response = Response.error(code=500, msg="Internal server error")
-
-    assert response.code == 500
-    assert response.msg == "Internal server error"
-    assert response.data is None
+    assert response.code == expected_code
+    assert response.msg == expected_msg
+    assert response.data == expected_data
 
 
 def test_response_model_dump():
