@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
+from starlette.middleware import Middleware
 
 from src.auth.oauth import oauth_router
 from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
 from src.core.config import get_settings
+from src.handlers import register_exception_handlers
+from src.responses.middleware import ResponseWrapperMiddleware
 
 from .session import close_db, init_db
 
@@ -40,7 +43,12 @@ def create_app() -> FastAPI:
         version=settings.app.version,
         debug=settings.app.debug,
         lifespan=lifespan,
+        middleware=[
+            Middleware(ResponseWrapperMiddleware),
+        ],
     )
+
+    register_exception_handlers(app)
 
     app.include_router(auth_router, prefix="/auth", tags=["auth"])
     app.include_router(oauth_router, prefix="/auth", tags=["auth"])

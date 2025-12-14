@@ -4,6 +4,8 @@ Standard fastapi-users routes (/register, /reset-password, /verify, /users)
 are tested by the library itself and not duplicated here.
 """
 
+from src.core.schemas.error import ErrorCode
+
 
 async def test_login_success(test_client, test_user):
     response = await test_client.post(
@@ -24,8 +26,10 @@ async def test_login_invalid_credentials(test_client, test_user):
         data={"username": "test@example.com", "password": "wrongpassword"},
     )
 
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Invalid credentials"
+    assert response.status_code == 401
+    data = response.json()
+    assert data["msg"] == "Invalid credentials"
+    assert data["code"] == ErrorCode.AUTH_INVALID_CREDENTIALS
 
 
 async def test_login_nonexistent_user(test_client):
@@ -34,7 +38,8 @@ async def test_login_nonexistent_user(test_client):
         data={"username": "nonexistent@example.com", "password": "password"},
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 401
+    assert response.json()["code"] == ErrorCode.AUTH_INVALID_CREDENTIALS
 
 
 async def test_refresh_token_success(test_client, test_user):
@@ -61,7 +66,9 @@ async def test_refresh_token_invalid(test_client):
     )
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid refresh token"
+    data = response.json()
+    assert data["msg"] == "Invalid token"
+    assert data["code"] == ErrorCode.AUTH_TOKEN_INVALID
 
 
 async def test_logout_success(test_client, test_user):
@@ -82,6 +89,7 @@ async def test_logout_success(test_client, test_user):
         "/auth/jwt/refresh", params={"refresh_token": refresh_token}
     )
     assert refresh_response.status_code == 401
+    assert refresh_response.json()["code"] == ErrorCode.AUTH_TOKEN_INVALID
 
 
 async def test_refresh_token_inactive_user(test_client, test_user, test_db):
@@ -103,8 +111,10 @@ async def test_refresh_token_inactive_user(test_client, test_user, test_db):
         "/auth/jwt/refresh", params={"refresh_token": refresh_token}
     )
 
-    assert response.status_code == 401
-    assert response.json()["detail"] == "User not found or inactive"
+    assert response.status_code == 403
+    data = response.json()
+    assert data["msg"] == "User inactive"
+    assert data["code"] == ErrorCode.USER_INACTIVE
 
 
 async def test_reset_password_revokes_tokens(test_client, test_user, local_cache):
@@ -126,3 +136,4 @@ async def test_reset_password_revokes_tokens(test_client, test_user, local_cache
     )
 
     assert response.status_code == 401
+    assert response.json()["code"] == ErrorCode.AUTH_TOKEN_INVALID
