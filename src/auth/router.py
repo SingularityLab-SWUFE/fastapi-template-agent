@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.exceptions import BusinessException, ErrorCode
+from src.core.schemas.error import ErrorCode
+from src.exceptions import BusinessException
 
 from . import fastapi_users
 from .backend import RefreshTokenManager, get_jwt_strategy, get_refresh_token_manager

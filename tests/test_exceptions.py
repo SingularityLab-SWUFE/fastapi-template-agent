@@ -1,4 +1,5 @@
-from src.exceptions import BusinessException, ErrorCode, InvalidPasswordException
+from src.core.schemas.error import ErrorCode
+from src.exceptions import BusinessException, InvalidPasswordException
 
 
 def test_business_exception_with_error_code():

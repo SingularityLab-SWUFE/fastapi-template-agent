@@ -1,23 +1,4 @@
-from enum import IntEnum
-
-
-class ErrorCode(IntEnum):
-    AUTH_INVALID_CREDENTIALS = 10001
-    AUTH_INVALID_PASSWORD = 10002
-    AUTH_TOKEN_INVALID = 10004
-    AUTH_ACCOUNT_LOCKED = 10005
-
-    USER_NOT_FOUND = 20001
-    USER_INACTIVE = 20003
-
-    PERM_INSUFFICIENT = 30001
-
-    DATA_VALIDATION_FAILED = 40001
-
-    BIZ_INSUFFICIENT_BALANCE = 50001
-    BIZ_ORDER_EXPIRED = 50002
-
-    SYS_INTERNAL_ERROR = 90003
+from src.core.schemas.error import ErrorCode
 
 
 class BusinessException(Exception):

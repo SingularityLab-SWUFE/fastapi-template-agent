@@ -2,28 +2,11 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.exceptions import BusinessException, ErrorCode
+from src.core.schemas.error import error_code_to_http_status
+from src.exceptions import BusinessException
 from src.responses.base import Response
 
 __all__ = ["register_exception_handlers"]
-
-ERROR_CODE_TO_HTTP = {
-    ErrorCode.AUTH_INVALID_CREDENTIALS: 401,
-    ErrorCode.AUTH_INVALID_PASSWORD: 401,
-    ErrorCode.AUTH_TOKEN_INVALID: 401,
-    ErrorCode.AUTH_ACCOUNT_LOCKED: 403,
-    ErrorCode.USER_NOT_FOUND: 404,
-    ErrorCode.USER_INACTIVE: 403,
-    ErrorCode.PERM_INSUFFICIENT: 403,
-    ErrorCode.DATA_VALIDATION_FAILED: 422,
-    ErrorCode.BIZ_INSUFFICIENT_BALANCE: 402,
-    ErrorCode.BIZ_ORDER_EXPIRED: 410,
-    ErrorCode.SYS_INTERNAL_ERROR: 500,
-}
-
-
-def _get_http_status(error_code: ErrorCode) -> int:
-    return ERROR_CODE_TO_HTTP.get(error_code, 400)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -31,7 +14,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_business_exception(
         request: Request, exc: BusinessException
     ) -> JSONResponse:
-        http_status = _get_http_status(exc.code)
+        http_status = error_code_to_http_status(exc.code)
         response = Response.error(code=int(exc.code), msg=exc.msg, data=exc.data)
         return JSONResponse(content=response.model_dump(), status_code=http_status)
 

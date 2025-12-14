@@ -4,7 +4,7 @@ Standard fastapi-users routes (/register, /reset-password, /verify, /users)
 are tested by the library itself and not duplicated here.
 """
 
-from src.exceptions import ErrorCode
+from src.core.schemas.error import ErrorCode
 
 
 async def test_login_success(test_client, test_user):
