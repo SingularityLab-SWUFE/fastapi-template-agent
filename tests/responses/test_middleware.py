@@ -2,13 +2,34 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, PlainTextResponse
+from httpx import ASGITransport, AsyncClient
+
+from src.responses.middleware import ResponseWrapperMiddleware
+
+
+@pytest.mark.asyncio
+async def test_middleware_preserves_custom_headers(app_with_middleware: FastAPI):
+    @app_with_middleware.get("/api/with-headers")
+    async def with_headers_endpoint():
+        return JSONResponse(
+            content={"data": "test"},
+            headers={"X-Custom-Header": "custom-value"},
+        )
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app_with_middleware), base_url="http://test"
+    ) as client:
+        response = await client.get("/api/with-headers")
+
+    assert response.status_code == 200
+    assert response.headers.get("X-Custom-Header") == "custom-value"
+
 
 def test_should_skip_non_json():
     """Test middleware skips non-JSON responses."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-    from fastapi import Request
-    from fastapi.responses import PlainTextResponse
-
     middleware = ResponseWrapperMiddleware(app=MagicMock())
     request = MagicMock(spec=Request)
     request.url.path = "/test"
@@ -21,11 +42,6 @@ def test_should_skip_non_json():
 
 def test_should_skip_docs_paths():
     """Test middleware skips documentation paths."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-    from fastapi import Request
-    from fastapi.responses import JSONResponse
-    from unittest.mock import MagicMock
-
     middleware = ResponseWrapperMiddleware(app=MagicMock())
     request = MagicMock(spec=Request)
     response = MagicMock(spec=JSONResponse)
@@ -45,11 +61,6 @@ def test_should_skip_docs_paths():
 
 def test_should_not_skip_api_paths():
     """Test middleware does not skip API paths."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-    from fastapi import Request
-    from fastapi.responses import JSONResponse
-    from unittest.mock import MagicMock
-
     middleware = ResponseWrapperMiddleware(app=MagicMock())
     request = MagicMock(spec=Request)
     request.url.path = "/api/users"
@@ -61,8 +72,6 @@ def test_should_not_skip_api_paths():
 
 def test_is_already_wrapped_with_valid_response():
     """Test detection of already wrapped response."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
     middleware = ResponseWrapperMiddleware(app=MagicMock())
 
     valid_wrapped = {
@@ -76,8 +85,6 @@ def test_is_already_wrapped_with_valid_response():
 
 def test_is_already_wrapped_with_invalid_response():
     """Test detection of invalid wrapped response."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
     middleware = ResponseWrapperMiddleware(app=MagicMock())
 
     invalid_responses = [
@@ -88,124 +95,4 @@ def test_is_already_wrapped_with_invalid_response():
     ]
 
     for invalid in invalid_responses:
-        assert middleware._is_already_wrapped(invalid) is False, f"Should reject: {invalid}"
-
-
-def test_extract_error_msg_from_dict_with_detail():
-    """Test error message extraction from dict with 'detail' field."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"detail": "Error details"}
-    assert middleware._extract_error_msg(payload) == "Error details"
-
-
-def test_extract_error_msg_from_dict_with_msg():
-    """Test error message extraction from dict with 'msg' field."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"msg": "Custom message"}
-    assert middleware._extract_error_msg(payload) == "Custom message"
-
-
-def test_extract_error_msg_from_dict_with_message():
-    """Test error message extraction from dict with 'message' field."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"message": "Error message"}
-    assert middleware._extract_error_msg(payload) == "Error message"
-
-
-def test_extract_error_msg_from_dict_with_nested_detail():
-    """Test error message extraction from dict with nested detail."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"detail": {"error": "Something went wrong", "code": 123}}
-    result = middleware._extract_error_msg(payload)
-    assert "error" in result
-    assert "code" in result
-
-
-def test_extract_error_msg_from_string():
-    """Test error message extraction from string payload."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    assert middleware._extract_error_msg("String error") == "String error"
-
-
-def test_extract_error_msg_from_list():
-    """Test error message extraction from list payload."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-    import json
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = ["error1", "error2", "error3"]
-    result = middleware._extract_error_msg(payload)
-    assert json.loads(result) == payload
-
-
-def test_extract_error_msg_from_none():
-    """Test error message extraction from None payload."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    assert middleware._extract_error_msg(None) == "error"
-
-
-def test_extract_error_msg_from_unknown_type():
-    """Test error message extraction from unknown payload type."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    assert middleware._extract_error_msg(123) == "error"
-
-
-def test_extract_error_code_from_dict():
-    """Test extracting error code from dict payload."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"code": 1001}
-    assert middleware._extract_error_code(payload, 400) == 1001
-
-
-def test_extract_error_code_from_dict_with_non_int():
-    """Test error code extraction when code is not integer."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"code": "1001"}
-    assert middleware._extract_error_code(payload, 400) == 400
-
-
-def test_extract_error_code_from_dict_missing_code():
-    """Test error code extraction when code field missing."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    payload = {"detail": "error"}
-    assert middleware._extract_error_code(payload, 400) == 400
-
-
-def test_extract_error_code_from_non_dict_payload():
-    """Test error code extraction from non-dictionary payload."""
-    from src.responses.middleware import ResponseWrapperMiddleware
-
-    middleware = ResponseWrapperMiddleware(app=MagicMock())
-
-    assert middleware._extract_error_code(["error"], 400) == 400
+        assert middleware._is_already_wrapped(invalid) is False

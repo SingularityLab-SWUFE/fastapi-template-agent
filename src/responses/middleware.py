@@ -47,12 +47,17 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             ).model_dump()
             status_code = 200
         else:
-            error_msg = self._extract_error_msg(payload)
-            error_code = self._extract_error_code(payload, api_response.status_code)
-            new_payload = Response.error(
-                code=error_code, msg=error_msg, data=payload
-            ).model_dump()
-            status_code = api_response.status_code
+            return FastAPIResponse(
+                content=body,
+                status_code=api_response.status_code,
+                headers={
+                    k: v
+                    for k, v in api_response.headers.items()
+                    if k.lower() not in ("content-length", "content-encoding")
+                },
+                media_type=api_response.media_type,
+                background=api_response.background,
+            )
 
         return JSONResponse(
             content=new_payload,
@@ -92,33 +97,3 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
             return False
 
         return True
-
-    @staticmethod
-    def _extract_error_msg(payload: Any) -> str:
-        if payload is None:
-            return "error"
-
-        if isinstance(payload, str):
-            return payload
-
-        if isinstance(payload, dict):
-            detail = (
-                payload.get("detail") or payload.get("msg") or payload.get("message")
-            )
-            if isinstance(detail, str):
-                return detail
-            if detail is not None:
-                return json.dumps(detail, ensure_ascii=False)
-
-        if isinstance(payload, list):
-            return json.dumps(payload, ensure_ascii=False)
-
-        return "error"
-
-    @staticmethod
-    def _extract_error_code(payload: Any, default_code: int) -> int:
-        if isinstance(payload, dict):
-            candidate = payload.get("code")
-            if isinstance(candidate, int):
-                return candidate
-        return default_code
