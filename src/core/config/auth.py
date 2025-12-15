@@ -8,6 +8,8 @@ class AuthSettings(BaseSettings):
     jwt_algorithm: str = Field(default="HS256")
     jwt_lifetime_seconds: int = Field(default=1800)
     refresh_token_lifetime_seconds: int = Field(default=2592000)
+    rbac_enabled: bool = Field(default=True)
+    default_user_role: str = Field(default="user")
 
     oauth_google_client_id: str | None = None
     oauth_google_client_secret: str | None = None

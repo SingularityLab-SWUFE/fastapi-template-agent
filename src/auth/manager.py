@@ -2,9 +2,10 @@ from collections.abc import AsyncGenerator
 
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
+from sqlalchemy import select
 
 from src.core.config import Settings, get_settings
-from src.core.schemas import User
+from src.core.schemas import Role, User, UserRole
 
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,7 +36,22 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_register(
         self, user: User, request: Request | None = None
     ) -> None:
-        pass
+        if not self.settings.auth.rbac_enabled:
+            return
+
+        default_role = self.settings.auth.default_user_role
+        if not default_role:
+            return
+
+        result = await self.user_db.session.execute(
+            select(Role).where(Role.name == default_role)
+        )
+        role = result.scalar_one_or_none()
+        if not role:
+            return
+
+        self.user_db.session.add(UserRole(user_id=user.id, role_id=role.id))
+        await self.user_db.session.commit()
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Request | None = None
