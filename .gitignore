@@ -285,6 +285,7 @@ http-client.private.env.json
 # Claude Code
 # CLAUDE.md
 # .claude/
+settings.local.json
 
 # Docker & Kubernetes secrets
 config.yaml
@@ -292,3 +293,4 @@ k8s/secret.yaml
 
 # Database
 *.db
+
