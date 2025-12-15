@@ -294,3 +294,5 @@ k8s/secret.yaml
 # Database
 *.db
 
+# Copier Stuff
+**/.copier-answers.yml

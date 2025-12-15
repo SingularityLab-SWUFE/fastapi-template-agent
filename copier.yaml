@@ -2,7 +2,124 @@ _subdirectory: .
 _templates_suffix: .jinja
 
 project_name:
-  type: str
-  help: Project name, use to replace README/pyproject description
+  help: Project name
   default: my-backend-project
 
+development_database:
+  help: Development database type
+  choices:
+    - sqlite
+    - postgresql
+  default: sqlite
+
+sqlite_db_path:
+  help: SQLite database file path (relative to project root)
+  default: develop.db
+  when: "{{ development_database == 'sqlite' }}"
+
+postgresql_host:
+  help: PostgreSQL host
+  default: localhost
+  when: "{{ development_database == 'postgresql' }}"
+
+postgresql_port:
+  type: int
+  help: PostgreSQL port
+  default: 5432
+  when: "{{ development_database == 'postgresql' }}"
+
+postgresql_user:
+  help: PostgreSQL username
+  default: postgres
+  when: "{{ development_database == 'postgresql' }}"
+
+postgresql_password:
+  help: PostgreSQL password
+  secret: true
+  placeholder: Leave blank if you want to set it later
+  default: ""
+  when: "{{ development_database == 'postgresql' }}"
+
+postgresql_dbname:
+  help: PostgreSQL database name
+  default: "{{ project_name | lower | replace('-', '_') }}_dev"
+  when: "{{ development_database == 'postgresql' }}"
+
+cache_backend:
+  help: Cache backend to use for the application
+  choices:
+    - local
+    - redis
+  default: redis
+
+cache_host:
+  help: Cache host
+  default: localhost
+  when: "{{ cache_backend == 'redis' }}"
+
+cache_port:
+  type: int
+  help: Cache port
+  default: 6379
+  when: "{{ cache_backend == 'redis' }}"
+
+cache_db:
+  type: int
+  help: Cache DB/index
+  default: 0
+  when: "{{ cache_backend == 'redis' }}"
+
+cache_password:
+  help: Cache password
+  secret: true
+  placeholder: Leave blank if none
+  default: ""
+  when: "{{ cache_backend == 'redis' }}"
+
+jwt_secret:
+  help: Secret key for JWT authentication
+  default: changemelater
+
+# Optional Feature: OAuth Support
+use_oauth:
+  type: bool
+  help: Enable OAuth2 authentication support
+  default: false
+
+oauth_providers:
+  help: OAuth2 providers to include
+  multiselect: true
+  choices:
+    - "google"
+    - "github"
+  default: []
+  when: "{{ use_oauth }}"
+
+google_oauth_client_id:
+  help: Google OAuth2 Client ID
+  default: ""
+  when: "{{ 'google' in oauth_providers }}"
+
+google_oauth_client_secret:
+  help: Google OAuth2 Client Secret
+  secret: true
+  default: ""
+  when: "{{ 'google' in oauth_providers }}"
+
+github_oauth_client_id:
+  help: GitHub OAuth2 Client ID
+  default: ""
+  when: "{{ 'github' in oauth_providers }}"
+
+github_oauth_client_secret:
+  help: GitHub OAuth2 Client Secret
+  secret: true
+  default: ""
+  when: "{{ 'github' in oauth_providers }}"
+
+_answers_file: .copier/.copier-answers.yml
+
+_tasks:
+  - command: ["{{ _copier_python }}", ".copier/post_copy.py"]
+    when: "{{ _copier_operation == 'copy' }}"
+    description: Templates Overwrite
