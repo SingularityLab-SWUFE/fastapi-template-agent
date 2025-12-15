@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -10,6 +11,17 @@ async_session_factory: sessionmaker[AsyncSession]
 async def init_db(url: str, echo: bool = False) -> None:
     global engine, async_session_factory
     engine = create_async_engine(url, echo=echo)
+
+    if "sqlite" in url:
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def set_sqlite_pragma(dbapi_conn, connection_record):
+            cursor = dbapi_conn.cursor()
+            # By default, sqlite disables foreign key constraint enforcement
+            # see https://www.sqlite.org/foreignkeys.html#fk_enable
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
     async_session_factory = sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False
     )
