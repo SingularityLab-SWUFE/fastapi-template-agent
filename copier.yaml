@@ -1,0 +1,8 @@
+_subdirectory: .
+_templates_suffix: .jinja
+
+project_name:
+  type: str
+  help: Project name, use to replace README/pyproject description
+  default: my-backend-project
+
