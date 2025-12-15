@@ -1,12 +1,8 @@
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 from .mixins import TimestampMixin
-
-if TYPE_CHECKING:
-    from .user import User
 
 
 class UserRole(SQLModel, table=True):
@@ -37,15 +33,6 @@ class Role(SQLModel, TimestampMixin, table=True):
     description: str | None = Field(default=None, max_length=255)
     is_system: bool = Field(default=False)
 
-    permissions: list["Permission"] = Relationship(
-        back_populates="roles",
-        link_model=RolePermission,
-    )
-    users: list["User"] = Relationship(
-        back_populates="roles",
-        link_model=UserRole,
-    )
-
 
 class Permission(SQLModel, TimestampMixin, table=True):
     __tablename__ = "permissions"
@@ -55,8 +42,3 @@ class Permission(SQLModel, TimestampMixin, table=True):
     name: str = Field(max_length=100)
     description: str | None = Field(default=None, max_length=255)
     module: str = Field(max_length=100)
-
-    roles: list[Role] = Relationship(
-        back_populates="permissions",
-        link_model=RolePermission,
-    )

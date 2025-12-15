@@ -6,7 +6,6 @@ Create Date: 2025-12-15 10:45:00.000000
 
 """
 
-from datetime import datetime
 from typing import Sequence, Union
 
 from alembic import op
@@ -28,9 +27,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False
-        ),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
         sa.Column(
             "description",
             sqlmodel.sql.sqltypes.AutoString(length=255),
@@ -46,12 +43,8 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "code", sqlmodel.sql.sqltypes.AutoString(length=150), nullable=False
-        ),
-        sa.Column(
-            "name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False
-        ),
+        sa.Column("code", sqlmodel.sql.sqltypes.AutoString(length=150), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
         sa.Column(
             "description",
             sqlmodel.sql.sqltypes.AutoString(length=255),
@@ -69,8 +62,8 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=False),
         sa.Column("assigned_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["role_id"], ["roles.id"]),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
+        sa.ForeignKeyConstraint(["role_id"], ["roles.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id", "role_id"),
     )
 
@@ -79,40 +72,21 @@ def upgrade() -> None:
         sa.Column("role_id", sa.Integer(), nullable=False),
         sa.Column("permission_id", sa.Integer(), nullable=False),
         sa.Column("assigned_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["permission_id"], ["permissions.id"]),
-        sa.ForeignKeyConstraint(["role_id"], ["roles.id"]),
+        sa.ForeignKeyConstraint(
+            ["permission_id"], ["permissions.id"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(["role_id"], ["roles.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("role_id", "permission_id"),
     )
 
-    now = datetime.utcnow()
-    op.bulk_insert(
-        sa.table(
-            "roles",
-            sa.Column("created_at", sa.DateTime()),
-            sa.Column("updated_at", sa.DateTime()),
-            sa.Column("id", sa.Integer()),
-            sa.Column("name", sa.String()),
-            sa.Column("description", sa.String()),
-            sa.Column("is_system", sa.Boolean()),
-        ),
-        [
-            {
-                "id": 1,
-                "name": "admin",
-                "description": "System administrator role",
-                "is_system": True,
-                "created_at": now,
-                "updated_at": now,
-            },
-            {
-                "id": 2,
-                "name": "user",
-                "description": "Default user role",
-                "is_system": True,
-                "created_at": now,
-                "updated_at": now,
-            },
-        ],
+    op.execute(
+        """
+        INSERT INTO roles (id, name, description, is_system, created_at, updated_at)
+        VALUES
+            (1, 'admin', 'System administrator role', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            (2, 'user', 'Default user role', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (id) DO NOTHING
+        """
     )
 
 

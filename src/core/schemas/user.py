@@ -1,7 +1,6 @@
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 from .mixins import TimestampMixin
-from .rbac import Role, UserRole
 
 
 class User(SQLModel, TimestampMixin, table=True):
@@ -14,8 +13,3 @@ class User(SQLModel, TimestampMixin, table=True):
     is_active: bool = Field(default=True)
     is_superuser: bool = Field(default=False)
     is_verified: bool = Field(default=False)
-
-    roles: list["Role"] = Relationship(
-        back_populates="users",
-        link_model=UserRole,
-    )
