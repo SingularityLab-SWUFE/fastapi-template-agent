@@ -10,7 +10,7 @@ development_database:
   choices:
     - sqlite
     - postgresql
-  default: sqlite
+  default: postgresql
 
 sqlite_db_path:
   help: SQLite database file path (relative to project root)
@@ -19,7 +19,7 @@ sqlite_db_path:
 
 postgresql_host:
   help: PostgreSQL host
-  default: localhost
+  default: db
   when: "{{ development_database == 'postgresql' }}"
 
 postgresql_port:
@@ -37,12 +37,12 @@ postgresql_password:
   help: PostgreSQL password
   secret: true
   placeholder: Leave blank if you want to set it later
-  default: ""
+  default: postgres
   when: "{{ development_database == 'postgresql' }}"
 
 postgresql_dbname:
   help: PostgreSQL database name
-  default: "{{ project_name | lower | replace('-', '_') }}_dev"
+  default: appdb
   when: "{{ development_database == 'postgresql' }}"
 
 cache_backend:
@@ -54,7 +54,7 @@ cache_backend:
 
 cache_host:
   help: Cache host
-  default: localhost
+  default: redis
   when: "{{ cache_backend == 'redis' }}"
 
 cache_port:
