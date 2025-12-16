@@ -17,5 +17,3 @@ Closes #
 - [ ] All functions have full type annotations
 - [ ] Async/await used for all I/O operations
 - [ ] Tests added for new behaviors
-- [ ] `uv run pre-commit run --all-files` passes
-- [ ] `uv run pytest` passes

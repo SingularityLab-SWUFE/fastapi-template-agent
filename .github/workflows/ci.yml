@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: |
+      startsWith(github.head_ref, 'fix/') ||
+      startsWith(github.head_ref, 'feat/') ||
+      startsWith(github.head_ref, 'refactor/')
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+
+      - name: Sync dependencies
+        run: uv sync --dev
+
+      - name: Ruff check
+        run: uv run --frozen ruff check .
+
+      - name: Ruff format
+        run: uv run --frozen ruff format --check .
+
+      - name: Pytest
+        env:
+          PYTHONPATH: .
+          APP__NAME: ${{ vars.CI_APP_NAME }}
+          DB__DRIVER: ${{ vars.CI_DB_DRIVER }}
+          DB__DATABASE: ${{ vars.CI_DB_DATABASE }}
+          CACHE__BACKEND: ${{ vars.CI_CACHE_BACKEND }}
+          AUTH__JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+        run: uv run --frozen pytest --cov -q
