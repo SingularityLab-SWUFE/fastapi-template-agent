@@ -1,0 +1,53 @@
+# {{ project_name }}
+
+## Development Setup
+
+- Python >= 3.12
+- [uv](https://github.com/astral-sh/uv)
+- [just](https://github.com/casey/just)
+
+### Install uv
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Install just
+
+`just` is used to simplify command execution. You can also refer to commands in `justfile` directly. Installation options:
+
+```bash
+cargo install just
+```
+
+Or
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+```
+
+## Contributing
+
+**Read [CONTRIBUTIONS.md](/CONTRIBUTIONS.md) before contributing.**
+
+### Quick Start for Contributors
+
+1. **Install dependencies**
+   ```bash
+   just dev
+   ```
+
+2. **Install pre-commit hooks**
+   ```bash
+   just hooks
+   ```
+
+3. **Create an issue first**
+   - Every PR requires a corresponding issue
+   - Discuss approach and scope before writing code
+
+4. **Run checks before submitting PR**
+   ```bash
+   just check
+   just test
+   ```
