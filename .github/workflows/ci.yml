@@ -50,16 +50,9 @@ jobs:
       - name: Pytest
         env:
           PYTHONPATH: .
-          APP__NAME: test-app
-          APP__VERSION: 0.0.0
-          APP__DEBUG: false
-          APP__HOST: 0.0.0.0
-          APP__PORT: 8000
-          DB__DRIVER: sqlite
-          DB__DATABASE: ":memory:"
-          CACHE__BACKEND: local
-          AUTH__JWT_SECRET: test-secret-key-for-ci
-          AUTH__JWT_ALGORITHM: HS256
-          AUTH__JWT_LIFETIME_SECONDS: 1800
-          AUTH__REFRESH_TOKEN_LIFETIME_SECONDS: 2592000
+          APP__NAME: ${{ vars.CI_APP_NAME }}
+          DB__DRIVER: ${{ vars.CI_DB_DRIVER }}
+          DB__DATABASE: ${{ vars.CI_DB_DATABASE }}
+          CACHE__BACKEND: ${{ vars.CI_CACHE_BACKEND }}
+          AUTH__JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
         run: uv run --frozen pytest --cov -q
