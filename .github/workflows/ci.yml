@@ -50,4 +50,9 @@ jobs:
       - name: Pytest
         env:
           PYTHONPATH: .
+          APP__NAME: ${{ vars.CI_APP_NAME }}
+          DB__DRIVER: ${{ vars.CI_DB_DRIVER }}
+          DB__DATABASE: ${{ vars.CI_DB_DATABASE }}
+          CACHE__BACKEND: ${{ vars.CI_CACHE_BACKEND }}
+          AUTH__JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
         run: uv run --frozen pytest --cov -q

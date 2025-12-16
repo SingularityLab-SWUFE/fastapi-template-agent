@@ -32,6 +32,18 @@ You can **clone or fork** the repo as it is, or use `copier` to create a new pro
 uvx copier copy gh:SingularityLab-SWUFE/fastapi-template-agent --trust  # will do some file mv
 ```
 
+## CI
+
+The CI workflow runs tests on pull requests with branch names starting with `fix/`, `feat/`, or `refactor/`.
+
+To enables/configures ci, create repository variables and secrets as needed:
+
+- `CI_JWT_SECRET`
+- `CI_APP_NAME`
+- `CI_CACHE_BACKEND`
+- `CI_DB_DATABASE`
+- `CI_DB_DRIVER`
+
 ## Deploy
 
 ### Docker Setup
