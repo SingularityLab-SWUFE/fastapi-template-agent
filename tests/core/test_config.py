@@ -38,7 +38,7 @@ def test_settings_created_by_env_file(env_example_path):
     assert (
         custom_settings.app.name == "Test App Loading env var"
     )  # overwrite by env var
-    assert custom_settings.db.host == "localhost"
+    assert custom_settings.db.host == "db"
 
 
 def test_settings_loading_env_variables():
@@ -50,4 +50,4 @@ def test_settings_loading_env_variables():
     get_settings.cache_clear()
     settings = get_settings()
     assert settings.app.name == "Test App Loading env var"
-    assert settings.db.host == "localhost"
+    assert settings.db.host == "db"

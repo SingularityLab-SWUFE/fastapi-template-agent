@@ -32,6 +32,26 @@ You can **clone or fork** the repo as it is, or use `copier` to create a new pro
 uvx copier copy gh:SingularityLab-SWUFE/fastapi-template-agent --trust  # will do some file mv
 ```
 
+## Deploy
+
+### Docker Setup
+
+- Start services (production):
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
+- Start services for development (mounts project and enables hot reload):
+
+```bash
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up --build
+```
+
+The compose files read environment variables from the repository root `.env` file. Adjust that file for DB and cache settings as needed.
+
+**Note**: the docker compose setup will run database migrations automatically before the app starts (the app image's entrypoint runs `alembic upgrade head` against the `db` service). The repository `.env` has been updated to use a local Postgres instance (`DB__DRIVER=postgresql`, host `db`).
+
 ## Usage Examples
 
 ### Using Cache

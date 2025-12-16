@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  app:
+    # Development overrides: mount project root and enable hot reload
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - ..:/app:rw
+    environment:
+      APP_DEBUG: "true"
+    command: sh -c "uvicorn src.main:app --host 0.0.0.0 --port ${APP_PORT:-8000} --reload"
