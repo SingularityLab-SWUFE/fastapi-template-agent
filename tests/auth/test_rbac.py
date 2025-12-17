@@ -12,7 +12,7 @@ def mock_session():
 @pytest.fixture
 def permission_service(mock_session):
     repository = PermissionRepository(mock_session)
-    return PermissionService(mock_session, repository=repository)
+    return PermissionService(repository=repository)
 
 
 @pytest.mark.asyncio
@@ -77,7 +77,7 @@ async def test_check_permissions_wildcard(
 @pytest.mark.parametrize(
     "user_perms,required_perms,wildcard_support,expected",
     [
-        ({"user:read"}, [""], True, True),
+        ({"user:read"}, [""], True, False),
         ({"user:read"}, [""], False, False),
         ({"user:read", "user:*"}, ["user:"], True, False),
         ({"user:read"}, ["user:"], False, False),
@@ -133,7 +133,7 @@ async def test_check_permissions_module_without_action_as_wildcard(
         user_id=user_id, required_perms=["user"], match="all", wildcard_support=True
     )
 
-    assert result is True
+    assert result is False
 
 
 @pytest.mark.asyncio
@@ -173,7 +173,7 @@ async def test_get_user_roles(mock_session, permission_service):
 async def test_check_permissions_with_various_scenarios(
     user_perms, required_perms, match, expected
 ):
-    service = PermissionService(session=AsyncMock())
+    service = PermissionService(repository=AsyncMock())
     service.get_user_permissions = AsyncMock(return_value=user_perms)
 
     result = await service.check_permissions(
@@ -196,7 +196,7 @@ async def test_check_permissions_with_various_scenarios(
 async def test_check_roles_with_various_scenarios(
     user_roles, required_roles, match, expected
 ):
-    service = PermissionService(session=AsyncMock())
+    service = PermissionService(repository=AsyncMock())
     service.get_user_roles = AsyncMock(return_value=user_roles)
 
     result = await service.check_roles(
@@ -217,10 +217,10 @@ async def test_check_roles_with_various_scenarios(
         ("user:read", "*", True, True),
         ("admin:write", "*", True, True),
         ("user:read", "admin:read", True, False),
-        ("user", "user:read", True, True),
-        ("user", "user:write", True, True),
-        ("user:read", "user", True, False),
-        ("user:write", "user", True, False),
+        ("user", "user:read", True, False),
+        ("user", "user:write", True, False),
+        ("user:read", "user", True, True),
+        ("user:write", "user", True, True),
         ("user:read", "user:*", True, True),
         ("user:write", "user:*", True, True),
     ],
@@ -229,7 +229,7 @@ async def test_check_roles_with_various_scenarios(
 async def test_match_permission_scenarios(
     required_perm, user_perm, wildcard_support, expected
 ):
-    service = PermissionService(session=AsyncMock())
+    service = PermissionService(repository=AsyncMock())
 
     result = service._match_permission(required_perm, user_perm, wildcard_support)
 
@@ -247,7 +247,7 @@ async def test_match_permission_scenarios(
 )
 @pytest.mark.asyncio
 async def test_split_permission_scenarios(permission, expected_module, expected_action):
-    service = PermissionService(session=AsyncMock())
+    service = PermissionService(repository=AsyncMock())
 
     module, action = service._split_permission(permission)
 

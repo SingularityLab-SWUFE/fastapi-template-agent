@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Literal
 
 from fastapi import Depends
@@ -20,6 +20,7 @@ class PermissionRepository:
     async def get_user_permissions(self, user_id: int) -> set[str]:
         stmt = (
             select(Permission.code)
+            .distinct()
             .join(RolePermission, Permission.id == RolePermission.permission_id)
             .join(UserRole, RolePermission.role_id == UserRole.role_id)
             .where(UserRole.user_id == user_id)
@@ -30,6 +31,7 @@ class PermissionRepository:
     async def get_user_roles(self, user_id: int) -> set[str]:
         stmt = (
             select(Role.name)
+            .distinct()
             .join(UserRole, Role.id == UserRole.role_id)
             .where(UserRole.user_id == user_id)
         )
@@ -38,12 +40,8 @@ class PermissionRepository:
 
 
 class PermissionService:
-    def __init__(
-        self,
-        session: AsyncSession,
-        repository: PermissionRepository | None = None,
-    ):
-        self.repository = repository or PermissionRepository(session)
+    def __init__(self, repository: PermissionRepository):
+        self.repository = repository
 
     @staticmethod
     def _split_permission(perm: str) -> tuple[str, str | None]:
@@ -64,14 +62,6 @@ class PermissionService:
         if not wildcard_support:
             return required_perm == user_perm
 
-        # Empty string: public access, no permission required
-        if required_perm == "":
-            return True
-
-        # "module:" with trailing colon: invalid syntax
-        if required_perm.endswith(":") and len(required_perm) > 1:
-            return False
-
         # "*": requires global permission, only user="*" satisfies
         if required_perm == "*":
             return user_perm == "*"
@@ -86,17 +76,17 @@ class PermissionService:
         if req_module != user_module:
             return False
 
-        # "module" (no action): alias for "module:*", matches any action in module
+        # required_perm must be "module:action" format (not bare "module")
         if req_action is None:
+            return False
+
+        # user has "module" (full module access): matches any "module:action"
+        if user_action is None:
             return True
 
         # "module:*": module wildcard, matches any action
         if req_action == "*":
             return True
-
-        # User has "module" but requirement is "module:action": no match
-        if user_action is None:
-            return False
 
         # Exact action match or user has "module:*"
         return user_action == req_action or user_action == "*"
@@ -150,7 +140,7 @@ async def get_permission_service(
     session: AsyncSession = Depends(get_session),
 ) -> PermissionService:
     repository = PermissionRepository(session=session)
-    return PermissionService(session=session, repository=repository)
+    return PermissionService(repository=repository)
 
 
 def require_permissions(
@@ -181,7 +171,7 @@ def require_permissions(
                 user_perms=user_perms,
             )
 
-    return Depends(dependency)
+    return dependency
 
 
 def require_roles(
@@ -210,11 +200,11 @@ def require_roles(
                 user_roles=user_roles,
             )
 
-    return Depends(dependency)
+    return dependency
 
 
 def owner_or_perm(
-    get_owner_id: Callable[..., int],
+    get_owner_id: Callable[..., int | Awaitable[int]],
     perms: str | list[str],
     match: Literal["all", "any"] = "all",
     bypass_superuser: bool = False,
@@ -248,4 +238,4 @@ def owner_or_perm(
                 user_perms=user_perms,
             )
 
-    return Depends(dependency)
+    return dependency
