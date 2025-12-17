@@ -105,27 +105,14 @@ class PermissionService:
     async def check_roles(
         self,
         user_id: int,
-        required_roles: Sequence[str | int],
-        match: Literal["all", "any"] = "any",
+        required_roles: Sequence[str],
+        match: Literal["all", "any"] = "all",
     ) -> bool:
         user_roles = await self.get_user_roles(user_id)
 
         if not required_roles:
             return True
 
-        id_roles = {r for r in required_roles if isinstance(r, int)}
-        id_to_name: dict[int, str] = {}
-        if id_roles:
-            stmt = select(Role.id, Role.name).where(Role.id.in_(id_roles))
-            result = await self.session.execute(stmt)
-            id_to_name = {row.id: row.name for row in result.all()}
-
-        matched = []
-        for required_role in required_roles:
-            if isinstance(required_role, str):
-                matched.append(required_role in user_roles)
-            else:
-                role_name = id_to_name.get(required_role)
-                matched.append(role_name in user_roles if role_name else False)
+        matched = [required_role in user_roles for required_role in required_roles]
 
         return all(matched) if match == "all" else any(matched)

@@ -65,8 +65,8 @@ class RBACDependencies:
 
     def require_roles(
         self,
-        *roles: str | int,
-        match: Literal["all", "any"] = "any",
+        *roles: str,
+        match: Literal["all", "any"] = "all",
         bypass_superuser: bool | None = None,
     ) -> Callable:
         async def dependency(user: User = Depends(current_user)) -> None:
@@ -205,8 +205,8 @@ def require_permissions(
 
 
 def require_roles(
-    *roles: str | int,
-    match: Literal["all", "any"] = "any",
+    *roles: str,
+    match: Literal["all", "any"] = "all",
     bypass_superuser: bool | None = None,
 ):
     async def dependency(

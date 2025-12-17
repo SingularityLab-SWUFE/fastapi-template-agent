@@ -1,5 +1,4 @@
 import pytest
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 from src.auth.permission_service import PermissionService
@@ -111,24 +110,7 @@ async def test_check_roles_by_name(permission_service):
     permission_service.get_user_roles = AsyncMock(return_value={"admin", "user"})
 
     result = await permission_service.check_roles(
-        user_id=user_id, required_roles=["admin"], match="any"
-    )
-
-    assert result is True
-
-
-@pytest.mark.asyncio
-async def test_check_roles_by_id(permission_service):
-    user_id = 1
-    permission_service.get_user_roles = AsyncMock(return_value={"admin"})
-    permission_service.session.execute = AsyncMock(
-        return_value=MagicMock(
-            all=MagicMock(return_value=[SimpleNamespace(id=1, name="admin")])
-        )
-    )
-
-    result = await permission_service.check_roles(
-        user_id=user_id, required_roles=[1], match="all"
+        user_id=user_id, required_roles=["admin"], match="all"
     )
 
     assert result is True
