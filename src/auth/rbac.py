@@ -120,14 +120,13 @@ class RBACDependencies:
 
     def owner_or_perm(
         self,
-        get_owner_id: Callable[..., int],
+        owner_id: int,
         perms: str | list[str],
         match: Literal["all", "any"] = "all",
         bypass_superuser: bool | None = None,
         wildcard_support: bool | None = None,
     ) -> Callable:
         async def dependency(
-            owner_id: int = Depends(get_owner_id),
             user: User = Depends(current_user),
         ) -> None:
             bypass = (
@@ -236,7 +235,7 @@ def owner_or_perm(
         user: User = Depends(current_user),
     ):
         owner_perm_dep = rbac_deps.owner_or_perm(
-            get_owner_id=get_owner_id,
+            owner_id=owner_id,
             perms=perms,
             match=match,
             bypass_superuser=bypass_superuser,

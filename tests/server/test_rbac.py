@@ -165,11 +165,8 @@ async def test_owner_or_perm_owner_access(rbac_deps):
     user.is_superuser = False
     rbac_deps.permission_service.check_permissions = AsyncMock()
 
-    def get_owner_id():
-        return 1
-
-    dependency = rbac_deps.owner_or_perm(get_owner_id, "user:read")
-    result = await dependency(user=user, owner_id=1)
+    dependency = rbac_deps.owner_or_perm(owner_id=1, perms="user:read")
+    result = await dependency(user=user)
 
     assert result is None
     rbac_deps.permission_service.check_permissions.assert_not_called()
@@ -182,11 +179,8 @@ async def test_owner_or_perm_permission_access(rbac_deps):
     user.is_superuser = False
     rbac_deps.permission_service.check_permissions = AsyncMock(return_value=True)
 
-    def get_owner_id():
-        return 1
-
-    dependency = rbac_deps.owner_or_perm(get_owner_id, "user:read")
-    result = await dependency(user=user, owner_id=1)
+    dependency = rbac_deps.owner_or_perm(owner_id=1, perms="user:read")
+    result = await dependency(user=user)
 
     assert result is None
     rbac_deps.permission_service.check_permissions.assert_called_once()
@@ -200,12 +194,9 @@ async def test_owner_or_perm_permission_denied(rbac_deps):
     rbac_deps.permission_service.check_permissions = AsyncMock(return_value=False)
     rbac_deps.permission_service.get_user_permissions = AsyncMock(return_value=set())
 
-    def get_owner_id():
-        return 1
-
-    dependency = rbac_deps.owner_or_perm(get_owner_id, ["user:read"])
+    dependency = rbac_deps.owner_or_perm(owner_id=1, perms=["user:read"])
 
     with pytest.raises(InsufficientPermissionException) as exc:
-        await dependency(user=user, owner_id=1)
+        await dependency(user=user)
 
     assert exc.value.code == 30001
