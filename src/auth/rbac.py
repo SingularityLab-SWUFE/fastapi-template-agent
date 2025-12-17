@@ -6,8 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Settings, get_settings
 from src.core.schemas import User
-from src.core.schemas.error import ErrorCode
-from src.exceptions import BusinessException, InsufficientPermissionException
+from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 from src.session import get_session
 
 from .permission_service import PermissionService
@@ -86,14 +85,10 @@ class RBACDependencies:
 
             if not has_roles:
                 user_roles = await self.permission_service.get_user_roles(user.id)
-                raise BusinessException(
-                    code=ErrorCode.PERM_INSUFFICIENT,
-                    msg=f"User {user.id} lacks required roles",
-                    data={
-                        "required": list(roles),
-                        "user_roles": list(user_roles),
-                        "user_id": user.id,
-                    },
+                raise InsufficientRoleException(
+                    user_id=user.id,
+                    required=list(roles),
+                    user_roles=user_roles,
                 )
 
         return dependency
@@ -101,7 +96,7 @@ class RBACDependencies:
     @overload
     def owner_or_perm(
         self,
-        get_owner_id: Callable[..., int],
+        owner_id: int,
         perms: str,
         match: Literal["all", "any"] = "all",
         bypass_superuser: bool | None = None,
@@ -111,7 +106,7 @@ class RBACDependencies:
     @overload
     def owner_or_perm(
         self,
-        get_owner_id: Callable[..., int],
+        owner_id: int,
         perms: list[str],
         match: Literal["all", "any"] = "all",
         bypass_superuser: bool | None = None,

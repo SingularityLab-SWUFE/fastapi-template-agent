@@ -32,3 +32,16 @@ class InsufficientPermissionException(BusinessException):
                 "user_id": user_id,
             },
         )
+
+
+class InsufficientRoleException(BusinessException):
+    def __init__(self, user_id: int, required: list[str], user_roles: set[str]):
+        super().__init__(
+            code=ErrorCode.PERM_INSUFFICIENT,
+            msg=f"User {user_id} lacks required roles",
+            data={
+                "required": list(required),
+                "user_roles": list(user_roles),
+                "user_id": user_id,
+            },
+        )

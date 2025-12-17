@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from src.auth.permission_service import PermissionService
 from src.auth.rbac import RBACDependencies
-from src.exceptions import InsufficientPermissionException
+from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 
 
 @pytest.fixture
@@ -24,10 +24,9 @@ def rbac_deps(permission_service):
 @pytest.mark.asyncio
 async def test_get_user_permissions(mock_session, permission_service):
     user_id = 1
-    mock_session.execute.return_value.scalars.return_value.all.return_value = [
-        "user:read",
-        "user:write",
-    ]
+    mock_session.execute.return_value.scalars = MagicMock(
+        return_value=MagicMock(all=MagicMock(return_value=["user:read", "user:write"]))
+    )
 
     result = await permission_service.get_user_permissions(user_id)
 
@@ -87,6 +86,72 @@ async def test_check_permissions_module_wildcard_from_user(permission_service):
     )
 
     assert result is True
+
+
+@pytest.mark.asyncio
+async def test_check_permissions_trailing_colon_not_module_wildcard(permission_service):
+    user_id = 1
+    permission_service.get_user_permissions = AsyncMock(
+        return_value={"user:read", "user:*"}
+    )
+
+    result = await permission_service.check_permissions(
+        user_id=user_id,
+        required_perms=["user:"],
+        match="all",
+        wildcard_support=True,
+    )
+
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_check_permissions_trailing_colon_without_wildcard_support(
+    permission_service,
+):
+    user_id = 1
+    permission_service.get_user_permissions = AsyncMock(return_value={"user:read"})
+
+    result = await permission_service.check_permissions(
+        user_id=user_id,
+        required_perms=["user:"],
+        match="all",
+        wildcard_support=False,
+    )
+
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_check_permissions_empty_required_as_wildcard(permission_service):
+    user_id = 1
+    permission_service.get_user_permissions = AsyncMock(return_value={"user:read"})
+
+    result = await permission_service.check_permissions(
+        user_id=user_id,
+        required_perms=[""],
+        match="all",
+        wildcard_support=True,
+    )
+
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_check_permissions_empty_required_without_wildcard_support(
+    permission_service,
+):
+    user_id = 1
+    permission_service.get_user_permissions = AsyncMock(return_value={"user:read"})
+
+    result = await permission_service.check_permissions(
+        user_id=user_id,
+        required_perms=[""],
+        match="all",
+        wildcard_support=False,
+    )
+
+    assert result is False
 
 
 @pytest.mark.asyncio
@@ -156,6 +221,24 @@ async def test_require_roles_dependency(rbac_deps):
     result = await dependency(user=user)
 
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_require_roles_insufficient(rbac_deps):
+    user = MagicMock()
+    user.id = 1
+    user.is_superuser = False
+    rbac_deps.permission_service.check_roles = AsyncMock(return_value=False)
+    rbac_deps.permission_service.get_user_roles = AsyncMock(return_value={"viewer"})
+
+    dependency = rbac_deps.require_roles("admin")
+
+    with pytest.raises(InsufficientRoleException) as exc:
+        await dependency(user=user)
+
+    assert exc.value.code == 30001
+    assert "admin" in exc.value.data["required"]
+    assert "viewer" in exc.value.data["user_roles"]
 
 
 @pytest.mark.asyncio

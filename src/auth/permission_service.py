@@ -1,7 +1,5 @@
 from collections.abc import Sequence
 from typing import Literal
-
-import inspect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +15,8 @@ class PermissionService:
         """Split permission into (module, action)."""
         if ":" in perm:
             module, action = perm.split(":", 1)
-            return module, action
+            # Treat empty action as absent (not a wildcard).
+            return module, action if action != "" else None
         return perm, None
 
     def _match_permission(
@@ -29,10 +28,13 @@ class PermissionService:
         if not wildcard_support:
             return required_perm == user_perm
 
-        if user_perm == "*":
+        if required_perm == "":
             return True
+
         if required_perm == "*":
             return user_perm == "*"
+        if user_perm == "*":
+            return True
 
         req_module, req_action = self._split_permission(required_perm)
         user_module, user_action = self._split_permission(user_perm)
@@ -46,6 +48,9 @@ class PermissionService:
         if req_action == "*":
             return True
 
+        if user_action is None:
+            return False
+
         return user_action == req_action or user_action == "*"
 
     async def get_user_permissions(self, user_id: int) -> set[str]:
@@ -56,13 +61,7 @@ class PermissionService:
             .where(UserRole.user_id == user_id)
         )
         result = await self.session.execute(stmt)
-        scalar_result = result.scalars()
-        if inspect.iscoroutine(scalar_result):
-            scalar_result = await scalar_result
-        records = scalar_result.all()
-        if inspect.iscoroutine(records):
-            records = await records
-        return set(records)
+        return set(result.scalars().all())
 
     async def get_user_roles(self, user_id: int) -> set[str]:
         stmt = (
@@ -71,13 +70,7 @@ class PermissionService:
             .where(UserRole.user_id == user_id)
         )
         result = await self.session.execute(stmt)
-        scalar_result = result.scalars()
-        if inspect.iscoroutine(scalar_result):
-            scalar_result = await scalar_result
-        records = scalar_result.all()
-        if inspect.iscoroutine(records):
-            records = await records
-        return set(records)
+        return set(result.scalars().all())
 
     async def check_permissions(
         self,
