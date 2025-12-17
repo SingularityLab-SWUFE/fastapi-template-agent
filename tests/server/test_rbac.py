@@ -1,8 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from src.auth.permission_service import PermissionService
 from src.auth.rbac import RBACDependencies
+from src.auth.repository import PermissionRepository
+from src.auth.service import PermissionService
 from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 
 
@@ -13,7 +14,8 @@ def mock_session():
 
 @pytest.fixture
 def permission_service(mock_session):
-    return PermissionService(mock_session)
+    repository = PermissionRepository(mock_session)
+    return PermissionService(mock_session, repository=repository)
 
 
 @pytest.fixture

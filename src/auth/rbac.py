@@ -9,7 +9,8 @@ from src.core.schemas import User
 from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 from src.session import get_session
 
-from .permission_service import PermissionService
+from .repository import PermissionRepository
+from .service import PermissionService
 from . import current_user
 
 
@@ -164,7 +165,8 @@ async def get_rbac_deps(
     session: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> RBACDependencies:
-    permission_service = PermissionService(session=session)
+    repository = PermissionRepository(session=session)
+    permission_service = PermissionService(session=session, repository=repository)
 
     return RBACDependencies(
         permission_service=permission_service,
