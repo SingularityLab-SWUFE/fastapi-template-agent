@@ -13,8 +13,8 @@ from src.session import get_session
 from .permission_service import PermissionService
 from . import current_user
 
-class RBACDependencies:
 
+class RBACDependencies:
     def __init__(
         self,
         permission_service: PermissionService,
@@ -32,13 +32,20 @@ class RBACDependencies:
         bypass_superuser: bool | None = None,
         wildcard_support: bool | None = None,
     ) -> Callable:
-
         async def dependency(user: User = Depends(current_user)) -> None:
-            bypass = bypass_superuser if bypass_superuser is not None else self.bypass_superuser
+            bypass = (
+                bypass_superuser
+                if bypass_superuser is not None
+                else self.bypass_superuser
+            )
             if bypass and user.is_superuser:
                 return
 
-            wildcard = wildcard_support if wildcard_support is not None else self.wildcard_support
+            wildcard = (
+                wildcard_support
+                if wildcard_support is not None
+                else self.wildcard_support
+            )
             has_perms = await self.permission_service.check_permissions(
                 user_id=user.id,
                 required_perms=perms,
@@ -63,7 +70,11 @@ class RBACDependencies:
         bypass_superuser: bool | None = None,
     ) -> Callable:
         async def dependency(user: User = Depends(current_user)) -> None:
-            bypass = bypass_superuser if bypass_superuser is not None else self.bypass_superuser
+            bypass = (
+                bypass_superuser
+                if bypass_superuser is not None
+                else self.bypass_superuser
+            )
             if bypass and user.is_superuser:
                 return
 
@@ -95,8 +106,7 @@ class RBACDependencies:
         match: Literal["all", "any"] = "all",
         bypass_superuser: bool | None = None,
         wildcard_support: bool | None = None,
-    ) -> Callable:
-        ...
+    ) -> Callable: ...
 
     @overload
     def owner_or_perm(
@@ -106,8 +116,7 @@ class RBACDependencies:
         match: Literal["all", "any"] = "all",
         bypass_superuser: bool | None = None,
         wildcard_support: bool | None = None,
-    ) -> Callable:
-        ...
+    ) -> Callable: ...
 
     def owner_or_perm(
         self,
@@ -117,12 +126,15 @@ class RBACDependencies:
         bypass_superuser: bool | None = None,
         wildcard_support: bool | None = None,
     ) -> Callable:
-
         async def dependency(
             owner_id: int = Depends(get_owner_id),
             user: User = Depends(current_user),
         ) -> None:
-            bypass = bypass_superuser if bypass_superuser is not None else self.bypass_superuser
+            bypass = (
+                bypass_superuser
+                if bypass_superuser is not None
+                else self.bypass_superuser
+            )
             if bypass and user.is_superuser:
                 return
 
@@ -130,7 +142,11 @@ class RBACDependencies:
                 return
 
             perms_list = [perms] if isinstance(perms, str) else list(perms)
-            wildcard = wildcard_support if wildcard_support is not None else self.wildcard_support
+            wildcard = (
+                wildcard_support
+                if wildcard_support is not None
+                else self.wildcard_support
+            )
 
             has_perms = await self.permission_service.check_permissions(
                 user_id=user.id,
@@ -184,6 +200,7 @@ def require_permissions(
             wildcard_support=wildcard_support,
         )
         return await perm_dep(user=user)
+
     return Depends(dependency)
 
 
@@ -202,6 +219,7 @@ def require_roles(
             bypass_superuser=bypass_superuser,
         )
         return await role_dep(user=user)
+
     return Depends(dependency)
 
 
@@ -225,4 +243,5 @@ def owner_or_perm(
             wildcard_support=wildcard_support,
         )
         return await owner_perm_dep(user=user, owner_id=owner_id)
+
     return Depends(dependency)

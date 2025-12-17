@@ -14,6 +14,7 @@ class AuthSettings(BaseSettings):
     oauth_github_client_id: str | None = None
     oauth_github_client_secret: str | None = None
 
+
 class RBACSettings(BaseSettings):
     bypass_superuser: bool = True
     wildcard_support: bool = True
