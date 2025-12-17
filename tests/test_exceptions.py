@@ -1,7 +1,12 @@
 import pytest
 
 from src.core.schemas.error import ErrorCode
-from src.exceptions import BusinessException, InvalidPasswordException
+from src.exceptions import (
+    BusinessException,
+    InsufficientPermissionException,
+    InsufficientRoleException,
+    InvalidPasswordException,
+)
 
 
 @pytest.mark.parametrize(
@@ -31,6 +36,12 @@ from src.exceptions import BusinessException, InvalidPasswordException
             None,
             "[30001] Permission denied",
         ),
+        (
+            ErrorCode.ROLE_INSUFFICIENT,
+            "Role denied",
+            None,
+            "[30002] Role denied",
+        ),
     ],
 )
 def test_business_exception_exposes_code_message_data_and_string(
@@ -51,3 +62,33 @@ def test_domain_exception_includes_remaining_attempts_in_message_and_data():
     assert exc.msg == "Invalid password, 3 attempts remaining"
     assert exc.data == {"remaining_attempts": 3}
     assert str(exc) == "[10002] Invalid password, 3 attempts remaining"
+
+
+def test_insufficient_permission_exception_includes_required_and_user_perms():
+    user_perms = {"user:read", "user:write"}
+    exc = InsufficientPermissionException(
+        user_id=123,
+        required=["admin:delete", "admin:create"],
+        user_perms=user_perms,
+    )
+
+    assert exc.code == ErrorCode.PERM_INSUFFICIENT
+    assert exc.msg == "User 123 lacks required permissions"
+    assert exc.data["user_id"] == 123
+    assert set(exc.data["required"]) == {"admin:delete", "admin:create"}
+    assert set(exc.data["user_permissions"]) == {"user:read", "user:write"}
+
+
+def test_insufficient_role_exception_includes_required_and_user_roles():
+    user_roles = {"user", "moderator"}
+    exc = InsufficientRoleException(
+        user_id=456,
+        required=["admin", "superuser"],
+        user_roles=user_roles,
+    )
+
+    assert exc.code == ErrorCode.ROLE_INSUFFICIENT
+    assert exc.msg == "User 456 lacks required roles"
+    assert exc.data["user_id"] == 456
+    assert set(exc.data["required"]) == {"admin", "superuser"}
+    assert set(exc.data["user_roles"]) == {"user", "moderator"}

@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 
 import dotenv
 import pytest
+from fakeredis import FakeAsyncRedis
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -11,11 +12,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 
 from migrations.seed_data import insert_rbac_seed_data_async
+from src.cache import LocalCache, RedisCache
 from src.main import app
 from src.session import get_session
 
 env_path = Path(__file__).parent.parent / ".env-example"
 dotenv.load_dotenv(dotenv_path=env_path)
+
+
+@pytest.fixture
+def settings():
+    from src.core.config import get_settings
+
+    return get_settings()
 
 
 @pytest.fixture
@@ -91,6 +100,23 @@ async def test_db():
 
 
 @pytest.fixture
+async def local_cache():
+    cache = LocalCache()
+    yield cache
+    await cache.close()
+
+
+@pytest.fixture
+async def redis_cache():
+    cache = RedisCache(host="localhost", port=6379, db=1)
+    cache._client = FakeAsyncRedis(decode_responses=True)
+    await cache.clear()
+    yield cache
+    await cache.clear()
+    await cache.close()
+
+
+@pytest.fixture
 async def test_user(test_db):
     from fastapi_users.password import PasswordHelper
 
@@ -112,3 +138,20 @@ async def test_user(test_db):
         await session.commit()
         await session.refresh(user)
         yield user
+
+
+@pytest.fixture
+async def test_client(test_db, local_cache):
+    from src.cache import get_cache
+
+    async def override_get_cache():
+        yield local_cache
+
+    app.dependency_overrides[get_cache] = override_get_cache
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
+
+    del app.dependency_overrides[get_cache]
