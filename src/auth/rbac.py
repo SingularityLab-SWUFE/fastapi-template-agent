@@ -205,7 +205,7 @@ def require_roles(
 
 def owner_or_perm(
     get_owner_id: Callable[..., int | Awaitable[int]],
-    perms: str | list[str],
+    perms: list[str],
     match: Literal["all", "any"] = "all",
     bypass_superuser: bool = False,
     wildcard_support: bool = True,
@@ -221,11 +221,9 @@ def owner_or_perm(
         if user.id == owner_id:
             return
 
-        perms_list = [perms] if isinstance(perms, str) else list(perms)
-
         has_perms = await permission_service.check_permissions(
             user_id=user.id,
-            required_perms=perms_list,
+            required_perms=perms,
             match=match,
             wildcard_support=wildcard_support,
         )
@@ -234,7 +232,7 @@ def owner_or_perm(
             user_perms = await permission_service.get_user_permissions(user.id)
             raise InsufficientPermissionException(
                 user_id=user.id,
-                required=perms_list,
+                required=perms,
                 user_perms=user_perms,
             )
 
