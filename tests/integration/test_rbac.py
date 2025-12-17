@@ -1,5 +1,5 @@
 import pytest
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.auth import owner_or_perm, require_permissions, require_roles
@@ -115,23 +115,28 @@ async def rbac_client(test_db, local_cache, admin_user, regular_user):
 
     router = APIRouter()
 
-    @router.get("/perm-write", dependencies=[require_permissions("user:write")])
+    @router.get(
+        "/perm-write", dependencies=[Depends(require_permissions("user:write"))]
+    )
     async def perm_write():
         return {"message": "access granted"}
 
     @router.get(
         "/perm-any",
-        dependencies=[require_permissions("user:write", "user:delete", match="any")],
+        dependencies=[
+            Depends(require_permissions("user:write", "user:delete", match="any"))
+        ],
     )
     async def perm_any():
         return {"message": "access granted"}
 
-    @router.get("/role-admin", dependencies=[require_roles("admin")])
+    @router.get("/role-admin", dependencies=[Depends(require_roles("admin"))])
     async def role_admin():
         return {"message": "access granted"}
 
     @router.get(
-        "/role-any", dependencies=[require_roles("admin", "moderator", match="any")]
+        "/role-any",
+        dependencies=[Depends(require_roles("admin", "moderator", match="any"))],
     )
     async def role_any():
         return {"message": "access granted"}
@@ -141,7 +146,7 @@ async def rbac_client(test_db, local_cache, admin_user, regular_user):
 
     @router.get(
         "/resources/{resource_id}",
-        dependencies=[owner_or_perm(get_resource_owner_id, "user:delete")],
+        dependencies=[Depends(owner_or_perm(get_resource_owner_id, ["user:delete"]))],
     )
     async def resource(resource_id: int):
         return {"message": f"access to resource {resource_id}"}
