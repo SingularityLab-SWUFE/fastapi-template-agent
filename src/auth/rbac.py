@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from typing import Literal, overload
 
 from fastapi import Depends
