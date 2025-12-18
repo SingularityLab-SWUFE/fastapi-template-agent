@@ -1,5 +1,5 @@
 import pytest
-from fastapi import APIRouter, Depends, FastAPI
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
 from src.auth import owner_or_perm, require_permissions, require_roles
@@ -90,7 +90,30 @@ async def regular_user(test_db, rbac_data):
 
 
 @pytest.fixture
-async def rbac_client(test_db, local_cache, admin_user, regular_user):
+async def superuser_user(test_db, rbac_data):
+    from fastapi_users.password import PasswordHelper
+
+    password_helper = PasswordHelper()
+    hashed_password = password_helper.hash("super123")
+
+    async with test_db() as session:
+        user = User(
+            username="superuser",
+            email="super@example.com",
+            hashed_password=hashed_password,
+            is_active=True,
+            is_verified=True,
+            is_superuser=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+        yield user
+
+
+@pytest.fixture
+async def rbac_client(test_db, local_cache, admin_user, regular_user, superuser_user):
     from src.auth.router import router as auth_router
     from src.cache import get_cache
     from src.handlers import register_exception_handlers
@@ -149,6 +172,24 @@ async def rbac_client(test_db, local_cache, admin_user, regular_user):
         dependencies=[Depends(owner_or_perm(get_resource_owner_id, ["user:delete"]))],
     )
     async def resource(resource_id: int):
+        return {"message": f"access to resource {resource_id}"}
+
+    async def get_resource_owner_id_not_found(resource_id: int) -> int:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    @router.get(
+        "/resources-bypass/{resource_id}",
+        dependencies=[
+            Depends(
+                owner_or_perm(
+                    get_resource_owner_id_not_found,
+                    ["user:delete"],
+                    bypass_superuser=True,
+                )
+            )
+        ],
+    )
+    async def resource_bypass(resource_id: int):
         return {"message": f"access to resource {resource_id}"}
 
     app.include_router(router)
@@ -239,3 +280,11 @@ async def test_owner_or_perm_dependency(
     assert response.status_code == expected_status
     if expected_code:
         assert response.json()["code"] == expected_code
+
+
+@pytest.mark.asyncio
+async def test_owner_or_perm_bypass_superuser_skips_owner_lookup(rbac_client):
+    headers = await get_auth_headers(rbac_client, "super@example.com", "super123")
+    response = await rbac_client.get("/resources-bypass/999", headers=headers)
+
+    assert response.status_code == 200

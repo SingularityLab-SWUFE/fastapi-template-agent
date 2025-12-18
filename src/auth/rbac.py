@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Literal
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -210,19 +210,28 @@ def require_roles(
 
 
 def owner_or_perm(
-    get_owner_id: Callable[..., int | Awaitable[int]],
+    get_owner_id: Callable[..., Awaitable[int]],
     perms: list[str],
     match: Literal["all", "any"] = "all",
     bypass_superuser: bool = False,
     wildcard_support: bool = True,
 ):
     async def dependency(
-        owner_id: int = Depends(get_owner_id),
+        request: Request,
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
     ):
         if bypass_superuser and user.is_superuser:
             return
+
+        kwargs = dict(request.path_params)
+        for k, v in kwargs.items():
+            try:
+                kwargs[k] = int(v)
+            except (ValueError, TypeError):
+                pass
+
+        owner_id = await get_owner_id(**kwargs)
 
         if user.id == owner_id:
             return
