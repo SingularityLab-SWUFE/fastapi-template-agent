@@ -45,6 +45,8 @@ You can **clone or fork** the repo as it is, or use `copier` to create a new pro
 uvx copier copy gh:SingularityLab-SWUFE/fastapi-template-agent my-backend-project --trust  # will do some file mv
 ```
 
+This repo is also a public template on GitHub, you can directly use the "Use this template" button on the repo page, and vibing with Copilot!
+
 ## CI
 
 The CI workflow runs tests on pull requests with branch names starting with `fix/`, `feat/`, or `refactor/`.
