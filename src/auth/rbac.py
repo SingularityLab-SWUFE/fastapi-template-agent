@@ -101,9 +101,6 @@ class PermissionService:
         if match not in ("all", "any"):
             raise ValueError("match must be 'all' or 'any'")
 
-        if not required_perms:
-            return True
-
         user_perms = await self.repository.get_user_permissions(user_id)
 
         matched = []
@@ -126,9 +123,6 @@ class PermissionService:
         if match not in ("all", "any"):
             raise ValueError("match must be 'all' or 'any'")
 
-        if not required_roles:
-            return True
-
         user_roles = await self.repository.get_user_roles(user_id)
 
         matched = [required_role in user_roles for required_role in required_roles]
@@ -149,6 +143,9 @@ def require_permissions(
     bypass_superuser: bool = False,
     wildcard_support: bool = True,
 ):
+    if not perms:
+        raise ValueError("perms must not be empty")
+
     async def dependency(
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
@@ -174,6 +171,9 @@ def require_roles(
     match: Literal["all", "any"] = "all",
     bypass_superuser: bool = False,
 ):
+    if not roles:
+        raise ValueError("roles must not be empty")
+
     async def dependency(
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),

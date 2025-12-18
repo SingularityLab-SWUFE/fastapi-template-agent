@@ -106,7 +106,9 @@ async def test_check_permissions_empty_and_trailing_colon(
     permission_service, user_perms, required_perms, wildcard_support, expected
 ):
     user_id = 1
-    permission_service.get_user_permissions = AsyncMock(return_value=user_perms)
+    permission_service.repository.get_user_permissions = AsyncMock(
+        return_value=user_perms
+    )
 
     result = await permission_service.check_permissions(
         user_id=user_id,
@@ -121,7 +123,7 @@ async def test_check_permissions_empty_and_trailing_colon(
 @pytest.mark.asyncio
 async def test_check_permissions_global_wildcard(permission_service):
     user_id = 1
-    permission_service.get_user_permissions = AsyncMock(return_value={"*"})
+    permission_service.repository.get_user_permissions = AsyncMock(return_value={"*"})
 
     result = await permission_service.check_permissions(
         user_id=user_id,
@@ -145,7 +147,9 @@ async def test_check_permissions_module_without_action_as_wildcard(
     permission_service, user_perms
 ):
     user_id = 1
-    permission_service.get_user_permissions = AsyncMock(return_value=user_perms)
+    permission_service.repository.get_user_permissions = AsyncMock(
+        return_value=user_perms
+    )
 
     result = await permission_service.check_permissions(
         user_id=user_id, required_perms=["user"], match="all", wildcard_support=True
@@ -198,7 +202,6 @@ async def test_get_user_roles(mock_session, permission_service):
         ({"user:read"}, ["admin:write"], "all", False),
         ({"user:read"}, ["user:read", "user:write"], "all", False),
         ({"user:read"}, ["user:read", "user:write"], "any", True),
-        (set(), [], "all", True),
     ],
 )
 @pytest.mark.asyncio
