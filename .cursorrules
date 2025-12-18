@@ -24,25 +24,28 @@ This file provides guidance to any coding agent when working with code in this r
 
 ### Interaction Style
 - Respond user with its query language.
+- Include the file path with reference of code file.
 - DO NOT repeat what I have said.
 - DO NOT use polite phrases like "Okay, I'll help you," or "I'm happy to..."
 - DO NOT say "I am thinking about it..."; provide the optimal solution directly.
 
-### Solution Selection
-- If Plan A is more elegant than B, provide implementation A directly.
-- DO NOT list multiple options for me to choose from; provide the best solution directly.
-
 ### Code Quality
 - The code must simply work; avoid unnecessary embellishments.
-- DO NOT violate repo coding styles e.g. write Chinese comments in an international project.
+- If Plan A is more elegant than B, provide implementation A directly.
+- Align with existing code style.
+- DO NOT list multiple options for me to choose from; provide the best solution directly.
 - DO NOT over-optimize.
+- DO NOT make "clever" abstractions.
 - DO NOT consider backward compatibility; remove bad designs directly.
 
-### Scope Control
+### Scope Control: Keep diffs minimal
 - Provide the code directly: Give only what I ask for.
 - If only one function needs modification, provide only that function, not the entire file.
 - Only do what I explicitly request.
 - DO NOT unilaterally add extra features.
+- do not reformat unrelated lines.
+- do not reorder code unless required by the change.
+- Do not introduce new dependencies e.g. new packages; unless necessary, document it clearly.
 - DO NOT refactor code I did not ask you to change.
 - Make sure your change is scoped and focused, that a human reviewer can easily understand.
 
