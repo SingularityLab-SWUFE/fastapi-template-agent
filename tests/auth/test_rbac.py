@@ -48,6 +48,18 @@ async def test_check_permissions_match(
     assert result is expected
 
 
+@pytest.mark.asyncio
+async def test_check_permissions_invalid_match_raises(permission_service):
+    permission_service.get_user_permissions = AsyncMock(return_value={"user:read"})
+
+    with pytest.raises(ValueError, match="match must be 'all' or 'any'"):
+        await permission_service.check_permissions(
+            user_id=1,
+            required_perms=["user:read", "user:write"],
+            match="ALL",  # type: ignore[arg-type]
+        )
+
+
 @pytest.mark.parametrize(
     "user_perms,required_perms,wildcard_support,expected",
     [
@@ -146,6 +158,18 @@ async def test_check_roles_by_name(permission_service):
     )
 
     assert result is True
+
+
+@pytest.mark.asyncio
+async def test_check_roles_invalid_match_raises(permission_service):
+    permission_service.get_user_roles = AsyncMock(return_value={"admin"})
+
+    with pytest.raises(ValueError, match="match must be 'all' or 'any'"):
+        await permission_service.check_roles(
+            user_id=1,
+            required_roles=["admin", "moderator"],
+            match="ALL",  # type: ignore[arg-type]
+        )
 
 
 @pytest.mark.asyncio

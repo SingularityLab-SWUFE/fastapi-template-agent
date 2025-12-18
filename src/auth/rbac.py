@@ -104,10 +104,13 @@ class PermissionService:
         match: Literal["all", "any"] = "all",
         wildcard_support: bool = True,
     ) -> bool:
-        user_perms = await self.get_user_permissions(user_id)
+        if match not in ("all", "any"):
+            raise ValueError("match must be 'all' or 'any'")
 
         if not required_perms:
             return True
+
+        user_perms = await self.get_user_permissions(user_id)
 
         matched = []
         for required_perm in required_perms:
@@ -126,10 +129,13 @@ class PermissionService:
         required_roles: Sequence[str],
         match: Literal["all", "any"] = "all",
     ) -> bool:
-        user_roles = await self.get_user_roles(user_id)
+        if match not in ("all", "any"):
+            raise ValueError("match must be 'all' or 'any'")
 
         if not required_roles:
             return True
+
+        user_roles = await self.get_user_roles(user_id)
 
         matched = [required_role in user_roles for required_role in required_roles]
 
