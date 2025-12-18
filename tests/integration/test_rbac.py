@@ -192,6 +192,37 @@ async def rbac_client(test_db, local_cache, admin_user, regular_user, superuser_
     async def resource_bypass(resource_id: int):
         return {"message": f"access to resource {resource_id}"}
 
+    @router.get(
+        "/resources-no-bypass/{resource_id}",
+        dependencies=[
+            Depends(
+                owner_or_perm(
+                    get_resource_owner_id_not_found,
+                    ["user:delete"],
+                    bypass_superuser=False,
+                )
+            )
+        ],
+    )
+    async def resource_no_bypass(resource_id: int):
+        return {"message": f"access to resource {resource_id}"}
+
+    @router.get(
+        "/perm-wildcard",
+        dependencies=[Depends(require_permissions("admin:read"))],
+    )
+    async def perm_wildcard():
+        return {"message": "access granted"}
+
+    @router.get(
+        "/perm-wildcard-disabled",
+        dependencies=[
+            Depends(require_permissions("admin:read", wildcard_support=False))
+        ],
+    )
+    async def perm_wildcard_disabled():
+        return {"message": "access granted"}
+
     app.include_router(router)
 
     async with AsyncClient(
@@ -288,3 +319,32 @@ async def test_owner_or_perm_bypass_superuser_skips_owner_lookup(rbac_client):
     response = await rbac_client.get("/resources-bypass/999", headers=headers)
 
     assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_owner_or_perm_no_bypass_superuser_does_not_skip_owner_lookup(
+    rbac_client,
+):
+    headers = await get_auth_headers(rbac_client, "super@example.com", "super123")
+    response = await rbac_client.get("/resources-no-bypass/999", headers=headers)
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_require_permissions_wildcard_enabled_allows_module_wildcard(rbac_client):
+    headers = await get_auth_headers(rbac_client, "admin@example.com", "admin123")
+    response = await rbac_client.get("/perm-wildcard", headers=headers)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_require_permissions_wildcard_disabled_denies_module_wildcard(
+    rbac_client,
+):
+    headers = await get_auth_headers(rbac_client, "admin@example.com", "admin123")
+    response = await rbac_client.get("/perm-wildcard-disabled", headers=headers)
+
+    assert response.status_code == 403
+    assert response.json()["code"] == ErrorCode.PERM_INSUFFICIENT
