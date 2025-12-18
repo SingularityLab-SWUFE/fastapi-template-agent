@@ -19,6 +19,10 @@ default:
 run port=PORT:
     uv run --frozen uvicorn src.main:app --reload --host 0.0.0.0 --port {{port}}
 
+# Sync rules for agents
+@agent-rules-sync:
+    uv run scripts/agent_rules.py sync
+
 # Run tests
 @test:
     uv run --frozen pytest -xvs tests

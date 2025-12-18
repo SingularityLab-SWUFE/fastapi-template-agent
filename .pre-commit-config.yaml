@@ -21,3 +21,10 @@ repos:
         name: prevent commits to main
         args: [--branch, main]
 
+-   repo: local
+    hooks:
+    -   id: agent-rules
+        name: agent rules synced
+        entry: python scripts/agent_rules.py check
+        language: python
+        pass_filenames: false

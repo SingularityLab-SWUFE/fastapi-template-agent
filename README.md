@@ -12,11 +12,24 @@ Modern FastAPI Boilerplate for Agent Coding
 
 ### Agent
 
+Have you ever been bothered by coding agent consistently wasting token usage? This repo summarizes few patterns (e.g. outputing unnecessary documentation rubbish), and offer a ready-to-use solution:
+
 - **Cost-Effective Instructions**: Well-crafted prompts and guidelines optimized for efficient and economical agent usage.
-- **Unified Instruction Set**: Standardized instructions that different coding agents (claude code, copilot, cursor etc.) can consistently follow.
-- **Integrated Claude-Code Workflow**: Built-in support for common tasks like creating PRs, code reviews, and more.
+- **Unified Instruction for all agents**: Instructions that different coding agents can consistently follow, and automatic sync in precommit hook.
+
+| Agent product | Instruction file |
+| --- | --- |
+| Codex | `AGENTS.md` (source of truth) |
+| Claude Code | `CLAUDE.md` |
+| Cline | `.clinerules` |
+| Cursor | `.cursorrules` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+
+You can use the same pattern to your any other project that uses coding agent as well.
 
 ### Backend
+
+This repo also provides a full-featured, best-practiced backend template for building a robust/modern FastAPI application:
 
 - **Modern Tooling Stack**: State-of-the-art setup with `uv` for package management, `just` as task runner, `pre-commit` for git hooks, `pytest` for testing, and more.
 - **Authentication & Authorization**: Secure JWT-based authentication with role-based access control (RBAC).
@@ -29,8 +42,10 @@ Modern FastAPI Boilerplate for Agent Coding
 You can **clone or fork** the repo as it is, or use `copier` to create a new project from the template:
 
 ```bash
-uvx copier copy gh:SingularityLab-SWUFE/fastapi-template-agent --trust  # will do some file mv
+uvx copier copy gh:SingularityLab-SWUFE/fastapi-template-agent my-backend-project --trust  # will do some file mv
 ```
+
+This repo is also a public template on GitHub, you can directly use the "Use this template" button on the repo page, and vibing with Copilot!
 
 ## CI
 
@@ -63,6 +78,23 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up 
 The compose files read environment variables from the repository root `.env` file. Adjust that file for DB and cache settings as needed.
 
 **Note**: the docker compose setup will run database migrations automatically before the app starts (the app image's entrypoint runs `alembic upgrade head` against the `db` service). The repository `.env` has been updated to use a local Postgres instance (`DB__DRIVER=postgresql`, host `db`).
+
+## Agent instructing
+
+This repo keeps a single source of truth for agent rules in `AGENTS.md`, and syncs it to:
+
+- `CLAUDE.md`
+- `.clinerules`
+- `.cursorrules`
+- `.github/copilot-instructions.md`
+
+Update `AGENTS.md`, then run:
+
+```bash
+just agent-rules-sync
+```
+
+The `pre-commit` hook `agent-rules` runs the same check on commit.
 
 ## Usage Examples
 
