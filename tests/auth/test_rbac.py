@@ -22,7 +22,7 @@ async def test_get_user_permissions(mock_session, permission_service):
         return_value=MagicMock(all=MagicMock(return_value=["user:read", "user:write"]))
     )
 
-    result = await permission_service.get_user_permissions(user_id)
+    result = await permission_service.repository.get_user_permissions(user_id)
 
     assert result == {"user:read", "user:write"}
 
@@ -39,7 +39,9 @@ async def test_check_permissions_match(
     permission_service, user_perms, required_perms, match, expected
 ):
     user_id = 1
-    permission_service.get_user_permissions = AsyncMock(return_value=user_perms)
+    permission_service.repository.get_user_permissions = AsyncMock(
+        return_value=user_perms
+    )
 
     result = await permission_service.check_permissions(
         user_id=user_id, required_perms=required_perms, match=match
@@ -50,7 +52,9 @@ async def test_check_permissions_match(
 
 @pytest.mark.asyncio
 async def test_check_permissions_invalid_match_raises(permission_service):
-    permission_service.get_user_permissions = AsyncMock(return_value={"user:read"})
+    permission_service.repository.get_user_permissions = AsyncMock(
+        return_value={"user:read"}
+    )
 
     with pytest.raises(ValueError, match="match must be 'all' or 'any'"):
         await permission_service.check_permissions(
@@ -74,7 +78,9 @@ async def test_check_permissions_wildcard(
     permission_service, user_perms, required_perms, wildcard_support, expected
 ):
     user_id = 1
-    permission_service.get_user_permissions = AsyncMock(return_value=user_perms)
+    permission_service.repository.get_user_permissions = AsyncMock(
+        return_value=user_perms
+    )
 
     result = await permission_service.check_permissions(
         user_id=user_id,
@@ -151,7 +157,9 @@ async def test_check_permissions_module_without_action_as_wildcard(
 @pytest.mark.asyncio
 async def test_check_roles_by_name(permission_service):
     user_id = 1
-    permission_service.get_user_roles = AsyncMock(return_value={"admin", "user"})
+    permission_service.repository.get_user_roles = AsyncMock(
+        return_value={"admin", "user"}
+    )
 
     result = await permission_service.check_roles(
         user_id=user_id, required_roles=["admin"], match="all"
@@ -162,7 +170,7 @@ async def test_check_roles_by_name(permission_service):
 
 @pytest.mark.asyncio
 async def test_check_roles_invalid_match_raises(permission_service):
-    permission_service.get_user_roles = AsyncMock(return_value={"admin"})
+    permission_service.repository.get_user_roles = AsyncMock(return_value={"admin"})
 
     with pytest.raises(ValueError, match="match must be 'all' or 'any'"):
         await permission_service.check_roles(
@@ -179,7 +187,7 @@ async def test_get_user_roles(mock_session, permission_service):
         return_value=MagicMock(all=MagicMock(return_value=["admin", "user"]))
     )
 
-    result = await permission_service.get_user_roles(user_id)
+    result = await permission_service.repository.get_user_roles(user_id)
 
     assert result == {"admin", "user"}
 
@@ -198,7 +206,7 @@ async def test_check_permissions_with_various_scenarios(
     user_perms, required_perms, match, expected
 ):
     service = PermissionService(repository=AsyncMock())
-    service.get_user_permissions = AsyncMock(return_value=user_perms)
+    service.repository.get_user_permissions = AsyncMock(return_value=user_perms)
 
     result = await service.check_permissions(
         user_id=1, required_perms=required_perms, match=match
@@ -221,7 +229,7 @@ async def test_check_roles_with_various_scenarios(
     user_roles, required_roles, match, expected
 ):
     service = PermissionService(repository=AsyncMock())
-    service.get_user_roles = AsyncMock(return_value=user_roles)
+    service.repository.get_user_roles = AsyncMock(return_value=user_roles)
 
     result = await service.check_roles(
         user_id=1, required_roles=required_roles, match=match

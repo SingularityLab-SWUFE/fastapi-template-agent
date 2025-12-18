@@ -22,26 +22,18 @@ class InvalidPasswordException(BusinessException):
 
 
 class InsufficientPermissionException(BusinessException):
-    def __init__(self, user_id: int, required: list[str], user_perms: set[str]):
+    def __init__(self, required: list[str]):
         super().__init__(
             code=ErrorCode.PERM_INSUFFICIENT,
-            msg=f"User {user_id} lacks required permissions",
-            data={
-                "required": list(required),
-                "user_permissions": list(user_perms),
-                "user_id": user_id,
-            },
+            msg="Insufficient permissions",
+            data={"required": required},
         )
 
 
 class InsufficientRoleException(BusinessException):
-    def __init__(self, user_id: int, required: list[str], user_roles: set[str]):
+    def __init__(self, required: list[str]):
         super().__init__(
             code=ErrorCode.ROLE_INSUFFICIENT,
-            msg=f"User {user_id} lacks required roles",
-            data={
-                "required": list(required),
-                "user_roles": list(user_roles),
-                "user_id": user_id,
-            },
+            msg="Insufficient roles",
+            data={"required": required},
         )

@@ -65,30 +65,16 @@ def test_domain_exception_includes_remaining_attempts_in_message_and_data():
 
 
 def test_insufficient_permission_exception_includes_required_and_user_perms():
-    user_perms = {"user:read", "user:write"}
-    exc = InsufficientPermissionException(
-        user_id=123,
-        required=["admin:delete", "admin:create"],
-        user_perms=user_perms,
-    )
+    exc = InsufficientPermissionException(required=["admin:delete", "admin:create"])
 
     assert exc.code == ErrorCode.PERM_INSUFFICIENT
-    assert exc.msg == "User 123 lacks required permissions"
-    assert exc.data["user_id"] == 123
+    assert exc.msg == "Insufficient permissions"
     assert set(exc.data["required"]) == {"admin:delete", "admin:create"}
-    assert set(exc.data["user_permissions"]) == {"user:read", "user:write"}
 
 
 def test_insufficient_role_exception_includes_required_and_user_roles():
-    user_roles = {"user", "moderator"}
-    exc = InsufficientRoleException(
-        user_id=456,
-        required=["admin", "superuser"],
-        user_roles=user_roles,
-    )
+    exc = InsufficientRoleException(required=["admin", "superuser"])
 
     assert exc.code == ErrorCode.ROLE_INSUFFICIENT
-    assert exc.msg == "User 456 lacks required roles"
-    assert exc.data["user_id"] == 456
+    assert exc.msg == "Insufficient roles"
     assert set(exc.data["required"]) == {"admin", "superuser"}
-    assert set(exc.data["user_roles"]) == {"user", "moderator"}

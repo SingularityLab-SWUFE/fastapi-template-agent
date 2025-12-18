@@ -91,12 +91,6 @@ class PermissionService:
         # Exact action match or user has "module:*"
         return user_action == req_action or user_action == "*"
 
-    async def get_user_permissions(self, user_id: int) -> set[str]:
-        return await self.repository.get_user_permissions(user_id)
-
-    async def get_user_roles(self, user_id: int) -> set[str]:
-        return await self.repository.get_user_roles(user_id)
-
     async def check_permissions(
         self,
         user_id: int,
@@ -110,7 +104,7 @@ class PermissionService:
         if not required_perms:
             return True
 
-        user_perms = await self.get_user_permissions(user_id)
+        user_perms = await self.repository.get_user_permissions(user_id)
 
         matched = []
         for required_perm in required_perms:
@@ -135,7 +129,7 @@ class PermissionService:
         if not required_roles:
             return True
 
-        user_roles = await self.get_user_roles(user_id)
+        user_roles = await self.repository.get_user_roles(user_id)
 
         matched = [required_role in user_roles for required_role in required_roles]
 
@@ -170,12 +164,7 @@ def require_permissions(
         )
 
         if not has_perms:
-            user_perms = await permission_service.get_user_permissions(user.id)
-            raise InsufficientPermissionException(
-                user_id=user.id,
-                required=list(perms),
-                user_perms=user_perms,
-            )
+            raise InsufficientPermissionException(required=list(perms))
 
     return dependency
 
@@ -199,12 +188,7 @@ def require_roles(
         )
 
         if not has_roles:
-            user_roles = await permission_service.get_user_roles(user.id)
-            raise InsufficientRoleException(
-                user_id=user.id,
-                required=list(roles),
-                user_roles=user_roles,
-            )
+            raise InsufficientRoleException(required=list(roles))
 
     return dependency
 
@@ -244,11 +228,6 @@ def owner_or_perm(
         )
 
         if not has_perms:
-            user_perms = await permission_service.get_user_permissions(user.id)
-            raise InsufficientPermissionException(
-                user_id=user.id,
-                required=perms,
-                user_perms=user_perms,
-            )
+            raise InsufficientPermissionException(required=perms)
 
     return dependency
