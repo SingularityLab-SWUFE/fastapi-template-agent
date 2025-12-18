@@ -91,6 +91,17 @@ class PermissionService:
         # Exact action match or user has "module:*"
         return user_action == req_action or user_action == "*"
 
+    def _has_permission(
+        self,
+        required_perm: str,
+        user_perms: set[str],
+        wildcard_support: bool,
+    ) -> bool:
+        return any(
+            self._match_permission(required_perm, user_perm, wildcard_support)
+            for user_perm in user_perms
+        )
+
     async def check_permissions(
         self,
         user_id: int,
@@ -103,16 +114,15 @@ class PermissionService:
 
         user_perms = await self.repository.get_user_permissions(user_id)
 
-        matched = []
-        for required_perm in required_perms:
-            matched.append(
-                any(
-                    self._match_permission(required_perm, user_perm, wildcard_support)
-                    for user_perm in user_perms
-                ),
+        if match == "all":
+            return all(
+                self._has_permission(req, user_perms, wildcard_support)
+                for req in required_perms
             )
-
-        return all(matched) if match == "all" else any(matched)
+        return any(
+            self._has_permission(req, user_perms, wildcard_support)
+            for req in required_perms
+        )
 
     async def check_roles(
         self,
@@ -125,9 +135,9 @@ class PermissionService:
 
         user_roles = await self.repository.get_user_roles(user_id)
 
-        matched = [required_role in user_roles for required_role in required_roles]
-
-        return all(matched) if match == "all" else any(matched)
+        if match == "all":
+            return all(req in user_roles for req in required_roles)
+        return any(req in user_roles for req in required_roles)
 
 
 async def get_permission_service(
