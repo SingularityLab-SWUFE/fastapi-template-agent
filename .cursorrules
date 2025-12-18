@@ -34,6 +34,7 @@ This file provides guidance to any coding agent when working with code in this r
 
 ### Code Quality
 - The code must simply work; avoid unnecessary embellishments.
+- DO NOT violate repo coding styles e.g. write Chinese comments in an international project.
 - DO NOT over-optimize.
 - DO NOT consider backward compatibility; remove bad designs directly.
 
@@ -46,7 +47,9 @@ This file provides guidance to any coding agent when working with code in this r
 - Make sure your change is scoped and focused, that a human reviewer can easily understand.
 
 ### Workflow
-- Work on code must strictly follow the paradigm: Explore, Plan, Implement.
+- Work on code MUST strictly follow the paradigm: Explore, Plan, Implement.
+- Evaluate complexity of the given task. If simple, just implement.
+- Exploration gives you context about the codebase. If user provided enough context, skip exploration.
 
 ### Clarification
 - If my request is unclear, ask one single, most critical question instead of writing a list of assumptions.
