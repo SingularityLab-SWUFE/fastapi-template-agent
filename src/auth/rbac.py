@@ -195,7 +195,7 @@ def require_roles(
 
 def owner_or_perm(
     get_owner_id: Callable[..., Awaitable[int]],
-    perms: list[str],
+    perms: Sequence[str],
     match: Literal["all", "any"] = "all",
     bypass_superuser: bool = False,
     wildcard_support: bool = True,

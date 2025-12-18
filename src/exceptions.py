@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from src.core.schemas.error import ErrorCode
 
 
@@ -22,18 +24,18 @@ class InvalidPasswordException(BusinessException):
 
 
 class InsufficientPermissionException(BusinessException):
-    def __init__(self, required: list[str]):
+    def __init__(self, required: Sequence[str]):
         super().__init__(
             code=ErrorCode.PERM_INSUFFICIENT,
             msg="Insufficient permissions",
-            data={"required": required},
+            data={"required": list(required)},
         )
 
 
 class InsufficientRoleException(BusinessException):
-    def __init__(self, required: list[str]):
+    def __init__(self, required: Sequence[str]):
         super().__init__(
             code=ErrorCode.ROLE_INSUFFICIENT,
             msg="Insufficient roles",
-            data={"required": required},
+            data={"required": list(required)},
         )
