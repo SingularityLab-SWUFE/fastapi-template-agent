@@ -32,10 +32,7 @@ def _sync() -> int:
 
     for target in _targets(root):
         target.parent.mkdir(parents=True, exist_ok=True)
-        if target.is_symlink():
-            target.unlink()
-        target_data = _normalized_bytes(target) if target.exists() else None
-        if target_data != source_data:
+        if not target.exists() or _normalized_bytes(target) != source_data:
             target.write_bytes(source_data)
 
     return 0
@@ -46,16 +43,11 @@ def _check() -> int:
     source = root / "AGENTS.md"
     source_data = _normalized_bytes(source)
 
-    bad: list[str] = []
-    for target in _targets(root):
-        if not target.exists():
-            bad.append(str(target.relative_to(root)))
-            continue
-        if target.is_symlink():
-            bad.append(str(target.relative_to(root)))
-            continue
-        if _normalized_bytes(target) != source_data:
-            bad.append(str(target.relative_to(root)))
+    bad = [
+        str(target.relative_to(root))
+        for target in _targets(root)
+        if not target.exists() or _normalized_bytes(target) != source_data
+    ]
 
     if bad:
         sys.stderr.write("agent rules not synced:\\n")
