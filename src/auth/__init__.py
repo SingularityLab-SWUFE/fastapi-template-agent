@@ -12,3 +12,18 @@ fastapi_users = FastAPIUsers[User, int](
 
 current_user = fastapi_users.current_user(active=True)
 current_superuser = fastapi_users.current_user(active=True, superuser=True)
+
+from .rbac import (  # noqa: E402
+    require_permissions,
+    require_roles,
+    owner_or_perm,
+)
+
+__all__ = [
+    "fastapi_users",
+    "current_user",
+    "current_superuser",
+    "require_permissions",
+    "require_roles",
+    "owner_or_perm",
+]

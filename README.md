@@ -205,6 +205,8 @@ raise OutOfStockException(product_id=123, available=0)
 
 ### Protected Routes
 
+Authentication is well-implemented by `fastapi-users`, so use `current_user` and `current_superuser` dependencies to register route login or superuser access:
+
 ```python
 from fastapi import APIRouter, Depends
 from src.auth import current_user, current_superuser
@@ -223,7 +225,65 @@ async def delete_user(user_id: int, admin: User = Depends(current_superuser)):
     return {"deleted": user_id}
 ```
 
-<!-- TODO: RBAC -->
+We recommend you use RBAC related dependencies for permission control. Try avoid use `current_superuser`.
+
+### RBAC (Role-Based Access Control)
+
+If your views require more fine-grained permission control, use the `require_permissions`, `require_roles`, and `owner_or_perm` dependencies:
+
+```python
+from fastapi import APIRouter, Depends
+from src.auth import require_permissions, require_roles, owner_or_perm
+
+router = APIRouter()
+
+# Require specific permission
+# Note: you do not need to set current_user dependency here, as require_permissions does it internally
+@router.post("/users", dependencies=[Depends(require_permissions("user:create"))])
+async def create_user(data: dict):
+    return {"created": True}
+
+# Require multiple permissions (all)
+@router.delete(
+    "/users/{user_id}",
+    dependencies=[Depends(require_permissions("user:delete", "audit:log", match="all"))]
+)
+async def delete_user(user_id: int):
+    return {"deleted": user_id}
+
+# Require any of multiple permissions
+@router.get(
+    "/users/{user_id}",
+    dependencies=[Depends(require_permissions("user:read", "user:write", match="any"))]
+)
+async def get_user(user_id: int):
+    return {"id": user_id}
+
+# Require specific role
+# You can register an endpoint that both needs permission check and role check
+@router.get("/admin/stats", dependencies=[Depends(require_roles("admin"))])
+async def admin_stats():
+    return {"stats": "..."}
+
+# Owner or permission check
+async def get_post_owner_id(post_id: int) -> int:
+    # Fetch owner_id from database
+    return fetch_post_owner(post_id)
+
+@router.put(
+    "/posts/{post_id}",
+    dependencies=[Depends(owner_or_perm(get_post_owner_id, ["post:edit"]))]
+)
+async def update_post(post_id: int, data: dict):
+    # User can edit if they own the post OR have "post:edit" permission
+    return {"updated": True}
+```
+
+**Permission Format:**
+- `required_perm` must be `module:action` (e.g., `"user:read"`, `"post:delete"`)
+- `user_perm` can be `module` (full module access) or `module:action` (specific action)
+- `user_perm="user"` matches any `required_perm="user:*"`
+- Use `bypass_superuser=True` to allow superusers to bypass checks
 
 ### Dependency Injection settings
 
