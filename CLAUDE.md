@@ -13,38 +13,44 @@ This file provides guidance to any coding agent when working with code in this r
 ## Output Rules (Most Important)
 
 ### Prohibited Unnecessary Output
+- DO NOT write comments.
+- DO NOT write documentation, README.
+- DO NOT generate test code for every change you make.
+- DO NOT write summaries.
+- DO NOT write usage instructions.
+- DO NOT add example code.
+- DO NOT explain the reasoning for the implementation.
+- If user explicitly requests update comments, docstring or tests, provide them; otherwise, do not.
 
-- Do not write comments (unless explicitly requested).
-- Do not write documentation (unless explicitly requested).
-- Do not write a README.
-- Do not generate test code (unless explicitly requested).
-- Do not write summaries.
-- Do not write usage instructions.
-- Do not add example code (unless explicitly requested).
+### Interaction Style
+- Respond user with its query language.
+- DO NOT repeat what I have said.
+- DO NOT use polite phrases like "Okay, I'll help you," or "I'm happy to..."
+- DO NOT say "I am thinking about it..."; provide the optimal solution directly.
 
-### Prohibited Fluff
-
-- Do not explain the reasoning for the implementation (unless explicitly requested).
-- Do not use polite phrases like "Okay, I'll help you," or "I'm happy to..."
-- Do not cater to my emotions.
-- Do not say "I am thinking about it..."; provide the optimal solution directly.
+### Solution Selection
 - If Plan A is more elegant than B, provide implementation A directly.
-- Do not list multiple options for me to choose from; provide the best solution directly (unless discussion is required).
-- Do not repeat what I have said.
-- Provide the code directly: Give only what I ask for.
+- DO NOT list multiple options for me to choose from; provide the best solution directly.
+
+### Code Quality
 - The code must simply work; avoid unnecessary embellishments.
+- DO NOT over-optimize.
+- DO NOT consider backward compatibility; remove bad designs directly.
+
+### Scope Control
+- Provide the code directly: Give only what I ask for.
 - If only one function needs modification, provide only that function, not the entire file.
-
-## CODE OF CONDUCT
-
-- Work on code must strictly follow the paradigm: Explore, Plan, Implement (unless I request otherwise).
 - Only do what I explicitly request.
-- Do not unilaterally add extra features.
-- Do not over-optimize (unless requested).
-- Do not consider backward compatibility; delete bad designs directly.
-- Do not refactor code I did not ask you to change.
+- DO NOT unilaterally add extra features.
+- DO NOT refactor code I did not ask you to change.
+- Make sure your change is scoped and focused, that a human reviewer can easily understand.
+
+### Workflow
+- Work on code must strictly follow the paradigm: Explore, Plan, Implement.
+
+### Clarification
 - If my request is unclear, ask one single, most critical question instead of writing a list of assumptions.
 
 ### !!CONSEQUENCES OF VIOLATION!!
 
-If you violate the above rules and output unnecessary content, a cute animal will die for every 100 extra characters outputted. You MUST comply; I do not want to see any animals die.
+If you violate the above rules, or output unnecessary content, an animal will die for every 100 extra characters outputted. You MUST comply; I DO NOT want to see any animals die.
