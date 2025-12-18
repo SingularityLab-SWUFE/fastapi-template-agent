@@ -5,7 +5,6 @@ from .app import AppSettings
 from .auth import AuthSettings
 from .cache import CacheSettings
 from .database import DatabaseSettings
-from .auth import RBACSettings
 
 
 class Settings(BaseSettings):
@@ -19,4 +18,3 @@ class Settings(BaseSettings):
     auth: AuthSettings = Field(default_factory=AuthSettings)
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
-    rbac: RBACSettings = Field(default_factory=RBACSettings)

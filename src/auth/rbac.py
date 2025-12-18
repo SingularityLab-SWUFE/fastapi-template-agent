@@ -1,243 +1,233 @@
-from collections.abc import Callable
-from typing import Literal, overload
+from collections.abc import Awaitable, Callable, Sequence
+from typing import Literal
 
-from fastapi import Depends
+from fastapi import Depends, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.config import Settings, get_settings
 from src.core.schemas import User
+from src.core.schemas.rbac import Permission, Role, RolePermission, UserRole
 from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 from src.session import get_session
 
-from .repository import PermissionRepository
-from .service import PermissionService
 from . import current_user
 
 
-class RBACDependencies:
-    def __init__(
+class PermissionRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_user_permissions(self, user_id: int) -> set[str]:
+        stmt = (
+            select(Permission.code)
+            .distinct()
+            .join(RolePermission, Permission.id == RolePermission.permission_id)
+            .join(UserRole, RolePermission.role_id == UserRole.role_id)
+            .where(UserRole.user_id == user_id)
+        )
+        result = await self.session.execute(stmt)
+        return set(result.scalars().all())
+
+    async def get_user_roles(self, user_id: int) -> set[str]:
+        stmt = (
+            select(Role.name)
+            .distinct()
+            .join(UserRole, Role.id == UserRole.role_id)
+            .where(UserRole.user_id == user_id)
+        )
+        result = await self.session.execute(stmt)
+        return set(result.scalars().all())
+
+
+class PermissionService:
+    def __init__(self, repository: PermissionRepository):
+        self.repository = repository
+
+    @staticmethod
+    def _split_permission(perm: str) -> tuple[str, str | None]:
+        """Split permission into (module, action)."""
+        if ":" in perm:
+            module, action = perm.split(":", 1)
+            # Treat empty action as absent (not a wildcard).
+            return module, action if action != "" else None
+        return perm, None
+
+    def _match_permission(
         self,
-        permission_service: PermissionService,
-        bypass_superuser: bool = True,
+        required_perm: str,
+        user_perm: str,
+        wildcard_support: bool,
+    ) -> bool:
+        # Wildcard disabled: exact match only
+        if not wildcard_support:
+            return required_perm == user_perm
+
+        # "*": requires global permission, only user="*" satisfies
+        if required_perm == "*":
+            return user_perm == "*"
+        # user="*": global permission satisfies any requirement
+        if user_perm == "*":
+            return True
+
+        req_module, req_action = self._split_permission(required_perm)
+        user_module, user_action = self._split_permission(user_perm)
+
+        # Different modules: no match
+        if req_module != user_module:
+            return False
+
+        # required_perm must be "module:action" format (not bare "module")
+        if req_action is None:
+            return False
+
+        # user has "module" (full module access): matches any "module:action"
+        if user_action is None:
+            return True
+
+        # "module:*": module wildcard, matches any action
+        if req_action == "*":
+            return True
+
+        # Exact action match or user has "module:*"
+        return user_action == req_action or user_action == "*"
+
+    async def check_permissions(
+        self,
+        user_id: int,
+        required_perms: Sequence[str],
+        match: Literal["all", "any"] = "all",
         wildcard_support: bool = True,
-    ):
-        self.permission_service = permission_service
-        self.bypass_superuser = bypass_superuser
-        self.wildcard_support = wildcard_support
+    ) -> bool:
+        if match not in ("all", "any"):
+            raise ValueError("match must be 'all' or 'any'")
 
-    def require_permissions(
+        user_perms = await self.repository.get_user_permissions(user_id)
+
+        matched = []
+        for required_perm in required_perms:
+            matched.append(
+                any(
+                    self._match_permission(required_perm, user_perm, wildcard_support)
+                    for user_perm in user_perms
+                ),
+            )
+
+        return all(matched) if match == "all" else any(matched)
+
+    async def check_roles(
         self,
-        *perms: str,
+        user_id: int,
+        required_roles: Sequence[str],
         match: Literal["all", "any"] = "all",
-        bypass_superuser: bool | None = None,
-        wildcard_support: bool | None = None,
-    ) -> Callable:
-        async def dependency(user: User = Depends(current_user)) -> None:
-            bypass = (
-                bypass_superuser
-                if bypass_superuser is not None
-                else self.bypass_superuser
-            )
-            if bypass and user.is_superuser:
-                return
+    ) -> bool:
+        if match not in ("all", "any"):
+            raise ValueError("match must be 'all' or 'any'")
 
-            wildcard = (
-                wildcard_support
-                if wildcard_support is not None
-                else self.wildcard_support
-            )
-            has_perms = await self.permission_service.check_permissions(
-                user_id=user.id,
-                required_perms=perms,
-                match=match,
-                wildcard_support=wildcard,
-            )
+        user_roles = await self.repository.get_user_roles(user_id)
 
-            if not has_perms:
-                user_perms = await self.permission_service.get_user_permissions(user.id)
-                raise InsufficientPermissionException(
-                    user_id=user.id,
-                    required=list(perms),
-                    user_perms=user_perms,
-                )
+        matched = [required_role in user_roles for required_role in required_roles]
 
-        return dependency
-
-    def require_roles(
-        self,
-        *roles: str,
-        match: Literal["all", "any"] = "all",
-        bypass_superuser: bool | None = None,
-    ) -> Callable:
-        async def dependency(user: User = Depends(current_user)) -> None:
-            bypass = (
-                bypass_superuser
-                if bypass_superuser is not None
-                else self.bypass_superuser
-            )
-            if bypass and user.is_superuser:
-                return
-
-            has_roles = await self.permission_service.check_roles(
-                user_id=user.id,
-                required_roles=roles,
-                match=match,
-            )
-
-            if not has_roles:
-                user_roles = await self.permission_service.get_user_roles(user.id)
-                raise InsufficientRoleException(
-                    user_id=user.id,
-                    required=list(roles),
-                    user_roles=user_roles,
-                )
-
-        return dependency
-
-    @overload
-    def owner_or_perm(
-        self,
-        owner_id: int,
-        perms: str,
-        match: Literal["all", "any"] = "all",
-        bypass_superuser: bool | None = None,
-        wildcard_support: bool | None = None,
-    ) -> Callable: ...
-
-    @overload
-    def owner_or_perm(
-        self,
-        owner_id: int,
-        perms: list[str],
-        match: Literal["all", "any"] = "all",
-        bypass_superuser: bool | None = None,
-        wildcard_support: bool | None = None,
-    ) -> Callable: ...
-
-    def owner_or_perm(
-        self,
-        owner_id: int,
-        perms: str | list[str],
-        match: Literal["all", "any"] = "all",
-        bypass_superuser: bool | None = None,
-        wildcard_support: bool | None = None,
-    ) -> Callable:
-        async def dependency(
-            user: User = Depends(current_user),
-        ) -> None:
-            bypass = (
-                bypass_superuser
-                if bypass_superuser is not None
-                else self.bypass_superuser
-            )
-            if bypass and user.is_superuser:
-                return
-
-            if user.id == owner_id:
-                return
-
-            perms_list = [perms] if isinstance(perms, str) else list(perms)
-            wildcard = (
-                wildcard_support
-                if wildcard_support is not None
-                else self.wildcard_support
-            )
-
-            has_perms = await self.permission_service.check_permissions(
-                user_id=user.id,
-                required_perms=perms_list,
-                match=match,
-                wildcard_support=wildcard,
-            )
-
-            if not has_perms:
-                user_perms = await self.permission_service.get_user_permissions(user.id)
-                raise InsufficientPermissionException(
-                    user_id=user.id,
-                    required=perms_list,
-                    user_perms=user_perms,
-                )
-
-        return dependency
+        return all(matched) if match == "all" else any(matched)
 
 
-async def get_rbac_deps(
+async def get_permission_service(
     session: AsyncSession = Depends(get_session),
-    settings: Settings = Depends(get_settings),
-) -> RBACDependencies:
+) -> PermissionService:
     repository = PermissionRepository(session=session)
-    permission_service = PermissionService(session=session, repository=repository)
-
-    return RBACDependencies(
-        permission_service=permission_service,
-        bypass_superuser=(
-            settings.rbac.bypass_superuser if hasattr(settings, "rbac") else True
-        ),
-        wildcard_support=(
-            settings.rbac.wildcard_support if hasattr(settings, "rbac") else True
-        ),
-    )
+    return PermissionService(repository=repository)
 
 
 def require_permissions(
     *perms: str,
     match: Literal["all", "any"] = "all",
-    bypass_superuser: bool | None = None,
-    wildcard_support: bool | None = None,
+    bypass_superuser: bool = False,
+    wildcard_support: bool = True,
 ):
+    if not perms:
+        raise ValueError("perms must not be empty")
+
     async def dependency(
-        rbac_deps: RBACDependencies = Depends(get_rbac_deps),
+        permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
     ):
-        perm_dep = rbac_deps.require_permissions(
-            *perms,
+        if bypass_superuser and user.is_superuser:
+            return
+
+        has_perms = await permission_service.check_permissions(
+            user_id=user.id,
+            required_perms=perms,
             match=match,
-            bypass_superuser=bypass_superuser,
             wildcard_support=wildcard_support,
         )
-        return await perm_dep(user=user)
 
-    return Depends(dependency)
+        if not has_perms:
+            raise InsufficientPermissionException(required=list(perms))
+
+    return dependency
 
 
 def require_roles(
     *roles: str,
     match: Literal["all", "any"] = "all",
-    bypass_superuser: bool | None = None,
+    bypass_superuser: bool = False,
 ):
+    if not roles:
+        raise ValueError("roles must not be empty")
+
     async def dependency(
-        rbac_deps: RBACDependencies = Depends(get_rbac_deps),
+        permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
     ):
-        role_dep = rbac_deps.require_roles(
-            *roles,
-            match=match,
-            bypass_superuser=bypass_superuser,
-        )
-        return await role_dep(user=user)
+        if bypass_superuser and user.is_superuser:
+            return
 
-    return Depends(dependency)
+        has_roles = await permission_service.check_roles(
+            user_id=user.id,
+            required_roles=roles,
+            match=match,
+        )
+
+        if not has_roles:
+            raise InsufficientRoleException(required=list(roles))
+
+    return dependency
 
 
 def owner_or_perm(
-    get_owner_id: Callable[..., int],
-    perms: str | list[str],
+    get_owner_id: Callable[..., Awaitable[int]],
+    perms: list[str],
     match: Literal["all", "any"] = "all",
-    bypass_superuser: bool | None = None,
-    wildcard_support: bool | None = None,
+    bypass_superuser: bool = False,
+    wildcard_support: bool = True,
 ):
     async def dependency(
-        owner_id: int = Depends(get_owner_id),
-        rbac_deps: RBACDependencies = Depends(get_rbac_deps),
+        request: Request,
+        permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
     ):
-        owner_perm_dep = rbac_deps.owner_or_perm(
-            owner_id=owner_id,
-            perms=perms,
+        if bypass_superuser and user.is_superuser:
+            return
+
+        kwargs = dict(request.path_params)
+        for k, v in kwargs.items():
+            try:
+                kwargs[k] = int(v)
+            except (ValueError, TypeError):
+                pass
+
+        owner_id = await get_owner_id(**kwargs)
+
+        if user.id == owner_id:
+            return
+
+        has_perms = await permission_service.check_permissions(
+            user_id=user.id,
+            required_perms=perms,
             match=match,
-            bypass_superuser=bypass_superuser,
             wildcard_support=wildcard_support,
         )
-        return await owner_perm_dep(user=user, owner_id=owner_id)
 
-    return Depends(dependency)
+        if not has_perms:
+            raise InsufficientPermissionException(required=perms)
+
+    return dependency
