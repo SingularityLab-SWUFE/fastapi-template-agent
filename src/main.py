@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
 from starlette.middleware import Middleware
 
 from src.auth.oauth import create_oauth_router
@@ -52,6 +53,8 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router, prefix="/auth", tags=["auth"])
     app.include_router(create_oauth_router(settings), prefix="/auth", tags=["auth"])
+
+    add_pagination(app)
 
     return app
 

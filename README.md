@@ -36,6 +36,7 @@ This repo also provides a full-featured, best-practiced backend template for bui
 - **Caching**: Pluggable caching system with built-in Redis support.
 - **Standardized Responses**: Middleware for consistent, unified JSON response formatting across all endpoints.
 - **Custom Error Codes**: Flexible handling of business-specific error codes and messages.
+- **Pagination**: Built-in support for paginating query results using `fastapi-pagination`.
 
 ## Use
 
@@ -202,6 +203,29 @@ raise OutOfStockException(product_id=123, available=0)
 ```
 
 `BusinessException` can be addressed globally by the exception handlers, so you don't need to catch it in every endpoint.
+
+### Pagination
+
+Paginate query results with built-in [`fastapi-pagination`](https://github.com/uriyyo/fastapi-pagination) support.
+
+**Usage:**
+```python
+from fastapi import APIRouter, Depends
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import apaginate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.schemas import User
+from src.session import get_session
+
+router = APIRouter()
+
+@router.get("/users", response_model=Page[User])
+async def list_users(session: AsyncSession = Depends(get_session)):
+    return await apaginate(session, select(User))
+    # Response: {"code": 200, "msg": "success", "data": {"items": [...], "total": 100, "page": 1, "size": 50}}
+```
 
 ### Protected Routes
 
