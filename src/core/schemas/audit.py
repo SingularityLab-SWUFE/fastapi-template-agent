@@ -1,11 +1,12 @@
 from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import Column, Text, JSON
 from sqlmodel import Field, SQLModel
 
 
-class AuditAction:
+class AuditAction(StrEnum):
     LOGIN = "login"
     LOGOUT = "logout"
     REFRESH = "refresh"
@@ -17,7 +18,7 @@ class AuditAction:
     ROLE_CHECK = "role_check"
 
 
-class AuditResult:
+class AuditResult(StrEnum):
     SUCCESS = "success"
     FAILURE = "failure"
     GRANTED = "granted"

@@ -72,8 +72,7 @@ async def login(
 
     access_token = await strategy.write_token(user)
 
-    device_info = request.headers.get("user-agent")
-    refresh_token = await refresh_manager.create_refresh_token(user.id, device_info)
+    refresh_token = await refresh_manager.create_refresh_token(user.id, user_agent)
 
     await audit_service.log(
         action=AuditAction.LOGIN,
@@ -145,6 +144,15 @@ async def logout(
 ) -> MessageResponse:
     user_agent, ip = extract_client_info(request)
     user_id = await refresh_manager.verify_refresh_token(refresh_token)
+
+    if not user_id:
+        await audit_service.log(
+            action=AuditAction.LOGOUT,
+            result=AuditResult.FAILURE,
+            user_agent=user_agent,
+            ip=ip,
+        )
+        raise BusinessException(ErrorCode.AUTH_TOKEN_INVALID, "Invalid token")
 
     await refresh_manager.revoke_token(refresh_token)
 

@@ -65,8 +65,8 @@ class AuditService:
                 ip=ip,
                 extra=extra,
             )
-        except Exception as e:
-            logger.error(f"Failed to create audit log: {e}")
+        except Exception:
+            logger.exception("Failed to create audit log")
 
 
 async def get_audit_service(
@@ -78,5 +78,9 @@ async def get_audit_service(
 
 def extract_client_info(request: Request) -> tuple[str | None, str | None]:
     user_agent = request.headers.get("user-agent")
-    ip = request.client.host if request.client else None
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        ip = forwarded_for.split(",")[0].strip()
+    else:
+        ip = request.client.host if request.client else None
     return user_agent, ip
