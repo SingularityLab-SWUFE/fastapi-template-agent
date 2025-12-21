@@ -25,12 +25,7 @@ def upgrade() -> None:
     op.create_table(
         "audit_logs",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "occurred_at",
-            sa.DateTime(),
-            nullable=False,
-            server_default=sa.text("CURRENT_TIMESTAMP"),
-        ),
+        sa.Column("occurred_at", sa.DateTime(), nullable=False),
         sa.Column("actor_id", sa.Integer(), nullable=True),
         sa.Column(
             "action", sqlmodel.sql.sqltypes.AutoString(length=64), nullable=False
@@ -48,9 +43,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["actor_id"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_audit_logs_occurred_at"), "audit_logs", ["occurred_at"])
-    op.create_index(op.f("ix_audit_logs_actor_id"), "audit_logs", ["actor_id"])
     op.create_index(op.f("ix_audit_logs_action"), "audit_logs", ["action"])
+    op.create_index(op.f("ix_audit_logs_actor_id"), "audit_logs", ["actor_id"])
+    op.create_index(op.f("ix_audit_logs_occurred_at"), "audit_logs", ["occurred_at"])
 
 
 def downgrade() -> None:
