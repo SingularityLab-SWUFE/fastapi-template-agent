@@ -5,7 +5,10 @@ from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.audit import AuditService, get_audit_service
+from src.audit.service import extract_client_info
 from src.core.schemas import User
+from src.core.schemas.audit import AuditAction, AuditResult
 from src.core.schemas.rbac import Permission, Role, RolePermission, UserRole
 from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 from src.session import get_session
@@ -157,10 +160,22 @@ def require_permissions(
         raise ValueError("perms must not be empty")
 
     async def dependency(
+        request: Request,
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
+        audit_service: AuditService = Depends(get_audit_service),
     ):
+        user_agent, ip = extract_client_info(request)
+
         if bypass_superuser and user.is_superuser:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.GRANTED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms), "bypass": "superuser"},
+            )
             return
 
         has_perms = await permission_service.check_permissions(
@@ -171,7 +186,24 @@ def require_permissions(
         )
 
         if not has_perms:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.DENIED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms)},
+            )
             raise InsufficientPermissionException(required=list(perms))
+
+        await audit_service.log(
+            action=AuditAction.PERMISSION_CHECK,
+            result=AuditResult.GRANTED,
+            actor_id=user.id,
+            user_agent=user_agent,
+            ip=ip,
+            extra={"permissions": list(perms)},
+        )
 
     return dependency
 
@@ -185,10 +217,22 @@ def require_roles(
         raise ValueError("roles must not be empty")
 
     async def dependency(
+        request: Request,
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
+        audit_service: AuditService = Depends(get_audit_service),
     ):
+        user_agent, ip = extract_client_info(request)
+
         if bypass_superuser and user.is_superuser:
+            await audit_service.log(
+                action=AuditAction.ROLE_CHECK,
+                result=AuditResult.GRANTED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"roles": list(roles), "bypass": "superuser"},
+            )
             return
 
         has_roles = await permission_service.check_roles(
@@ -198,7 +242,24 @@ def require_roles(
         )
 
         if not has_roles:
+            await audit_service.log(
+                action=AuditAction.ROLE_CHECK,
+                result=AuditResult.DENIED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"roles": list(roles)},
+            )
             raise InsufficientRoleException(required=list(roles))
+
+        await audit_service.log(
+            action=AuditAction.ROLE_CHECK,
+            result=AuditResult.GRANTED,
+            actor_id=user.id,
+            user_agent=user_agent,
+            ip=ip,
+            extra={"roles": list(roles)},
+        )
 
     return dependency
 
@@ -214,8 +275,19 @@ def owner_or_perm(
         request: Request,
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
+        audit_service: AuditService = Depends(get_audit_service),
     ):
+        user_agent, ip = extract_client_info(request)
+
         if bypass_superuser and user.is_superuser:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.GRANTED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms), "bypass": "superuser"},
+            )
             return
 
         kwargs = dict(request.path_params)
@@ -228,6 +300,14 @@ def owner_or_perm(
         owner_id = await get_owner_id(**kwargs)
 
         if user.id == owner_id:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.GRANTED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms), "owner": True},
+            )
             return
 
         has_perms = await permission_service.check_permissions(
@@ -238,6 +318,23 @@ def owner_or_perm(
         )
 
         if not has_perms:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.DENIED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms)},
+            )
             raise InsufficientPermissionException(required=perms)
+
+        await audit_service.log(
+            action=AuditAction.PERMISSION_CHECK,
+            result=AuditResult.GRANTED,
+            actor_id=user.id,
+            user_agent=user_agent,
+            ip=ip,
+            extra={"permissions": list(perms)},
+        )
 
     return dependency
