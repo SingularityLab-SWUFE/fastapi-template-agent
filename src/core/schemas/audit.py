@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Column, Index, Text, JSON
+from sqlalchemy import Column, Text, JSON
 from sqlmodel import Field, SQLModel
 
 
@@ -34,7 +34,7 @@ class AuditLog(SQLModel, table=True):
         index=True,
     )
     actor_id: int | None = Field(default=None, foreign_key="users.id", index=True)
-    action: str = Field(nullable=False, index=True, max_length=64)
+    action: str = Field(nullable=False, max_length=64, index=True)
     resource_type: str | None = Field(default=None, max_length=64)
     resource_id: str | None = Field(default=None, sa_column=Column(Text))
     result: str = Field(nullable=False, max_length=32)
@@ -42,10 +42,4 @@ class AuditLog(SQLModel, table=True):
     ip: str | None = Field(default=None, max_length=45)
     extra: dict[str, Any] | None = Field(
         default=None, sa_column=Column(JSON, nullable=True)
-    )
-
-    __table_args__ = (
-        Index("ix_audit_logs_occurred_at", "occurred_at"),
-        Index("ix_audit_logs_actor_id", "actor_id"),
-        Index("ix_audit_logs_action", "action"),
     )
