@@ -36,6 +36,7 @@ This repo also provides a full-featured, best-practiced backend template for bui
 - **Caching**: Pluggable caching system with built-in Redis support.
 - **Standardized Responses**: Middleware for consistent, unified JSON response formatting across all endpoints.
 - **Custom Error Codes**: Flexible handling of business-specific error codes and messages.
+- **Pagination**: Built-in support for paginating query results using `fastapi-pagination`.
 
 ## Use
 
