@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from src.audit.service import AuditRepository, AuditService
 from src.core.schemas.audit import AuditAction, AuditResult
@@ -7,7 +7,9 @@ from src.core.schemas.audit import AuditAction, AuditResult
 
 @pytest.fixture
 def mock_session():
-    return AsyncMock()
+    session = AsyncMock()
+    session.add = MagicMock()
+    return session
 
 
 @pytest.fixture

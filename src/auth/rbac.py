@@ -275,8 +275,19 @@ def owner_or_perm(
         request: Request,
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
+        audit_service: AuditService = Depends(get_audit_service),
     ):
+        user_agent, ip = extract_client_info(request)
+
         if bypass_superuser and user.is_superuser:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.GRANTED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms), "bypass": "superuser"},
+            )
             return
 
         kwargs = dict(request.path_params)
@@ -289,6 +300,14 @@ def owner_or_perm(
         owner_id = await get_owner_id(**kwargs)
 
         if user.id == owner_id:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.GRANTED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms), "owner": True},
+            )
             return
 
         has_perms = await permission_service.check_permissions(
@@ -299,6 +318,23 @@ def owner_or_perm(
         )
 
         if not has_perms:
+            await audit_service.log(
+                action=AuditAction.PERMISSION_CHECK,
+                result=AuditResult.DENIED,
+                actor_id=user.id,
+                user_agent=user_agent,
+                ip=ip,
+                extra={"permissions": list(perms)},
+            )
             raise InsufficientPermissionException(required=perms)
+
+        await audit_service.log(
+            action=AuditAction.PERMISSION_CHECK,
+            result=AuditResult.GRANTED,
+            actor_id=user.id,
+            user_agent=user_agent,
+            ip=ip,
+            extra={"permissions": list(perms)},
+        )
 
     return dependency
