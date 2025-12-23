@@ -8,6 +8,7 @@ from src.auth.oauth import create_oauth_router
 from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
 from src.core.config import get_settings
+from src.core.router import router as core_router
 from src.handlers import register_exception_handlers
 from src.logging import setup_logging
 from src.responses.middleware import ResponseWrapperMiddleware
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router, prefix="/auth", tags=["auth"])
     app.include_router(create_oauth_router(settings), prefix="/auth", tags=["auth"])
+    app.include_router(core_router, tags=["core"])
 
     add_pagination(app)
 
