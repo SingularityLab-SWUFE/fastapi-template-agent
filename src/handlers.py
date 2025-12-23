@@ -28,6 +28,11 @@ async def log_exception(
     trace_id = get_trace_id(request.scope)
     request_id = request.scope.get("request_id")
 
+    actor_id = None
+    user = getattr(request.state, "user", None)
+    if user is not None and hasattr(user, "id"):
+        actor_id = user.id
+
     try:
         from src.session import async_session_factory
 
@@ -42,6 +47,7 @@ async def log_exception(
                 result=result,
                 trace_id=trace_id,
                 request_id=request_id,
+                actor_id=actor_id,
                 user_agent=request.headers.get("user-agent"),
                 ip=request.client.host if request.client else None,
                 extra={
