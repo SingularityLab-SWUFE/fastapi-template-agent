@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -9,6 +10,8 @@ from src.core.schemas.audit import AuditAction, AuditResult
 from src.core.schemas.error import error_code_to_http_status
 from src.exceptions import BusinessException
 from src.responses.base import Response
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["register_exception_handlers"]
 
@@ -22,7 +25,8 @@ async def log_exception(
     message: str,
     extra: dict[str, Any] | None = None,
 ) -> None:
-    trace_id = get_trace_id(request)
+    trace_id = get_trace_id(request.scope)
+    request_id = request.scope.get("request_id")
 
     try:
         from src.session import async_session_factory
@@ -36,6 +40,8 @@ async def log_exception(
             await service.log(
                 action=action,
                 result=result,
+                trace_id=trace_id,
+                request_id=request_id,
                 user_agent=request.headers.get("user-agent"),
                 ip=request.client.host if request.client else None,
                 extra={
@@ -44,12 +50,11 @@ async def log_exception(
                     "message": message,
                     "path": request.url.path,
                     "method": request.method,
-                    "trace_id": trace_id,
                     **(extra or {}),
                 },
             )
     except Exception:
-        pass
+        logger.exception("Failed to create audit log")
 
 
 def register_exception_handlers(app: FastAPI) -> None:

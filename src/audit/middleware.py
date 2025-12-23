@@ -1,10 +1,10 @@
+import logging
 import uuid
-from typing import Callable
+from typing import Any
 
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
 
-from .service import extract_client_info
+logger = logging.getLogger(__name__)
 
 
 class AuditContext:
@@ -27,38 +27,53 @@ class AuditContext:
         self.ip = ip
 
 
-class AuditMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+class AuditMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
         trace_id = str(uuid.uuid4())
         request_id = str(uuid.uuid4())
 
-        user_agent, ip = extract_client_info(request)
+        request_headers = dict(scope.get("headers", []))
+        user_agent = request_headers.get(b"user-agent", b"").decode()
+        forwarded_for = request_headers.get(b"x-forwarded-for", b"").decode()
+        if forwarded_for:
+            ip = forwarded_for.split(",")[0].strip()
+        else:
+            client = scope.get("client")
+            ip = client[0] if client else None
 
         audit_ctx = AuditContext(
             trace_id=trace_id,
             request_id=request_id,
-            method=request.method,
-            path=request.url.path,
-            query_params=dict(request.query_params),
-            user_agent=user_agent,
+            method=scope.get("method", ""),
+            path=scope.get("path", ""),
+            query_params={},
+            user_agent=user_agent or None,
             ip=ip,
         )
 
-        request.state.trace_id = trace_id
-        request.state.request_id = request_id
-        request.state.audit_ctx = audit_ctx
+        async def send_wrapper(message: dict[str, Any]) -> None:
+            if message["type"] == "http.response.start":
+                message["headers"].append((b"x-trace-id", trace_id.encode()))
+                message["headers"].append((b"x-request-id", request_id.encode()))
+            await send(message)
 
-        response = await call_next(request)
+        scope["trace_id"] = trace_id
+        scope["request_id"] = request_id
+        scope["audit_ctx"] = audit_ctx
 
-        response.headers["X-Trace-ID"] = trace_id
-        response.headers["X-Request-ID"] = request_id
-
-        return response
-
-
-def get_audit_context(request: Request) -> AuditContext | None:
-    return getattr(request.state, "audit_ctx", None)
+        await self.app(scope, receive, send_wrapper)
 
 
-def get_trace_id(request: Request) -> str | None:
-    return getattr(request.state, "trace_id", None)
+def get_audit_context(scope: Scope) -> AuditContext | None:
+    return scope.get("audit_ctx")
+
+
+def get_trace_id(scope: Scope) -> str | None:
+    return scope.get("trace_id")

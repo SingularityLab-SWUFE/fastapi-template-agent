@@ -53,9 +53,10 @@ def run_migrations_offline() -> None:
 
 
 def on_version_apply(connection: Connection, revision: str, direction: str) -> None:
-    user = (
-        context.get_x_argument("user") if hasattr(context, "get_x_argument") else None
-    )
+    user = None
+    if hasattr(context, "get_x_argument"):
+        x_args = context.get_x_argument(as_dictionary=True)
+        user = x_args.get("user") if isinstance(x_args, dict) else None
 
     sql = text(
         """

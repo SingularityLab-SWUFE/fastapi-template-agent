@@ -24,8 +24,12 @@ class AuditRepository:
         user_agent: str | None = None,
         ip: str | None = None,
         extra: dict[str, Any] | None = None,
+        trace_id: str | None = None,
+        request_id: str | None = None,
     ) -> None:
         audit_log = AuditLog(
+            trace_id=trace_id,
+            request_id=request_id,
             actor_id=actor_id,
             action=action,
             resource_type=resource_type,
@@ -53,6 +57,8 @@ class AuditService:
         user_agent: str | None = None,
         ip: str | None = None,
         extra: dict[str, Any] | None = None,
+        trace_id: str | None = None,
+        request_id: str | None = None,
     ) -> None:
         try:
             await self.repository.create_audit_log(
@@ -64,6 +70,8 @@ class AuditService:
                 user_agent=user_agent,
                 ip=ip,
                 extra=extra,
+                trace_id=trace_id,
+                request_id=request_id,
             )
         except Exception:
             logger.exception("Failed to create audit log")

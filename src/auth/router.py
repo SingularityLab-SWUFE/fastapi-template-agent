@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.audit import AuditService, get_audit_service
+from src.audit.middleware import get_trace_id
 from src.audit.service import extract_client_info
 from src.core.schemas.audit import AuditAction, AuditResult
 from src.core.schemas.error import ErrorCode
@@ -56,12 +57,16 @@ async def login(
     audit_service: AuditService = Depends(get_audit_service),
 ) -> TokenResponse:
     user_agent, ip = extract_client_info(request)
+    trace_id = get_trace_id(request.scope)
+    request_id = request.scope.get("request_id")
 
     user = await user_manager.authenticate(credentials)
     if not user or not user.is_active:
         await audit_service.log(
             action=AuditAction.LOGIN,
             result=AuditResult.FAILURE,
+            trace_id=trace_id,
+            request_id=request_id,
             user_agent=user_agent,
             ip=ip,
             extra={"username": credentials.username},
@@ -77,6 +82,8 @@ async def login(
     await audit_service.log(
         action=AuditAction.LOGIN,
         result=AuditResult.SUCCESS,
+        trace_id=trace_id,
+        request_id=request_id,
         actor_id=user.id,
         user_agent=user_agent,
         ip=ip,
@@ -99,6 +106,8 @@ async def refresh_jwt(
     audit_service: AuditService = Depends(get_audit_service),
 ) -> AccessTokenResponse:
     user_agent, ip = extract_client_info(request)
+    trace_id = get_trace_id(request.scope)
+    request_id = request.scope.get("request_id")
 
     user_id = await refresh_manager.verify_refresh_token(refresh_token)
 
@@ -106,6 +115,8 @@ async def refresh_jwt(
         await audit_service.log(
             action=AuditAction.REFRESH,
             result=AuditResult.FAILURE,
+            trace_id=trace_id,
+            request_id=request_id,
             user_agent=user_agent,
             ip=ip,
         )
@@ -116,6 +127,8 @@ async def refresh_jwt(
         await audit_service.log(
             action=AuditAction.REFRESH,
             result=AuditResult.FAILURE,
+            trace_id=trace_id,
+            request_id=request_id,
             actor_id=user_id,
             user_agent=user_agent,
             ip=ip,
@@ -127,6 +140,8 @@ async def refresh_jwt(
     await audit_service.log(
         action=AuditAction.REFRESH,
         result=AuditResult.SUCCESS,
+        trace_id=trace_id,
+        request_id=request_id,
         actor_id=user.id,
         user_agent=user_agent,
         ip=ip,
@@ -143,12 +158,16 @@ async def logout(
     audit_service: AuditService = Depends(get_audit_service),
 ) -> MessageResponse:
     user_agent, ip = extract_client_info(request)
+    trace_id = get_trace_id(request.scope)
+    request_id = request.scope.get("request_id")
     user_id = await refresh_manager.verify_refresh_token(refresh_token)
 
     if not user_id:
         await audit_service.log(
             action=AuditAction.LOGOUT,
             result=AuditResult.FAILURE,
+            trace_id=trace_id,
+            request_id=request_id,
             user_agent=user_agent,
             ip=ip,
         )
@@ -159,6 +178,8 @@ async def logout(
     await audit_service.log(
         action=AuditAction.LOGOUT,
         result=AuditResult.SUCCESS,
+        trace_id=trace_id,
+        request_id=request_id,
         actor_id=user_id,
         user_agent=user_agent,
         ip=ip,

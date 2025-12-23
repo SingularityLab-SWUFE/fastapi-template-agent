@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.audit import AuditService, get_audit_service
+from src.audit.middleware import get_trace_id
 from src.audit.service import extract_client_info
 from src.core.schemas import User
 from src.core.schemas.audit import AuditAction, AuditResult
@@ -166,11 +167,15 @@ def require_permissions(
         audit_service: AuditService = Depends(get_audit_service),
     ):
         user_agent, ip = extract_client_info(request)
+        trace_id = get_trace_id(request.scope)
+        request_id = request.scope.get("request_id")
 
         if bypass_superuser and user.is_superuser:
             await audit_service.log(
                 action=AuditAction.PERMISSION_CHECK,
                 result=AuditResult.GRANTED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -189,6 +194,8 @@ def require_permissions(
             await audit_service.log(
                 action=AuditAction.PERMISSION_CHECK,
                 result=AuditResult.DENIED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -199,6 +206,8 @@ def require_permissions(
         await audit_service.log(
             action=AuditAction.PERMISSION_CHECK,
             result=AuditResult.GRANTED,
+            trace_id=trace_id,
+            request_id=request_id,
             actor_id=user.id,
             user_agent=user_agent,
             ip=ip,
@@ -223,11 +232,15 @@ def require_roles(
         audit_service: AuditService = Depends(get_audit_service),
     ):
         user_agent, ip = extract_client_info(request)
+        trace_id = get_trace_id(request.scope)
+        request_id = request.scope.get("request_id")
 
         if bypass_superuser and user.is_superuser:
             await audit_service.log(
                 action=AuditAction.ROLE_CHECK,
                 result=AuditResult.GRANTED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -245,6 +258,8 @@ def require_roles(
             await audit_service.log(
                 action=AuditAction.ROLE_CHECK,
                 result=AuditResult.DENIED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -255,6 +270,8 @@ def require_roles(
         await audit_service.log(
             action=AuditAction.ROLE_CHECK,
             result=AuditResult.GRANTED,
+            trace_id=trace_id,
+            request_id=request_id,
             actor_id=user.id,
             user_agent=user_agent,
             ip=ip,
@@ -278,11 +295,15 @@ def owner_or_perm(
         audit_service: AuditService = Depends(get_audit_service),
     ):
         user_agent, ip = extract_client_info(request)
+        trace_id = get_trace_id(request.scope)
+        request_id = request.scope.get("request_id")
 
         if bypass_superuser and user.is_superuser:
             await audit_service.log(
                 action=AuditAction.PERMISSION_CHECK,
                 result=AuditResult.GRANTED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -303,6 +324,8 @@ def owner_or_perm(
             await audit_service.log(
                 action=AuditAction.PERMISSION_CHECK,
                 result=AuditResult.GRANTED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -321,6 +344,8 @@ def owner_or_perm(
             await audit_service.log(
                 action=AuditAction.PERMISSION_CHECK,
                 result=AuditResult.DENIED,
+                trace_id=trace_id,
+                request_id=request_id,
                 actor_id=user.id,
                 user_agent=user_agent,
                 ip=ip,
@@ -331,6 +356,8 @@ def owner_or_perm(
         await audit_service.log(
             action=AuditAction.PERMISSION_CHECK,
             result=AuditResult.GRANTED,
+            trace_id=trace_id,
+            request_id=request_id,
             actor_id=user.id,
             user_agent=user_agent,
             ip=ip,
