@@ -1,8 +1,11 @@
 import logging
 import uuid
 from typing import Any
+from urllib.parse import parse_qsl
 
 from starlette.types import ASGIApp, Receive, Scope, Send
+
+from src.core.schemas.audit import AuditAction, AuditResult
 
 logger = logging.getLogger(__name__)
 
@@ -48,18 +51,53 @@ class AuditMiddleware:
             client = scope.get("client")
             ip = client[0] if client else None
 
+        query_string = scope.get("query_string", b"").decode()
+        query_params = dict(parse_qsl(query_string, keep_blank_values=True))
+
         audit_ctx = AuditContext(
             trace_id=trace_id,
             request_id=request_id,
             method=scope.get("method", ""),
             path=scope.get("path", ""),
-            query_params={},
+            query_params=query_params,
             user_agent=user_agent or None,
             ip=ip,
         )
 
+        async def log_event(
+            action: str, result: str, extra: dict[str, Any] | None = None
+        ) -> None:
+            try:
+                from src.session import async_session_factory
+
+                from src.audit.service import AuditRepository, AuditService
+
+                async with async_session_factory() as session:
+                    repository = AuditRepository(session)
+                    service = AuditService(repository)
+                    await service.log(
+                        action=action,
+                        result=result,
+                        trace_id=trace_id,
+                        request_id=request_id,
+                        user_agent=audit_ctx.user_agent,
+                        ip=audit_ctx.ip,
+                        extra={
+                            "path": audit_ctx.path,
+                            "method": audit_ctx.method,
+                            "query_params": audit_ctx.query_params,
+                            **(extra or {}),
+                        },
+                    )
+            except Exception:
+                logger.exception("Failed to create audit log")
+
+        status_code: int | None = None
+
         async def send_wrapper(message: dict[str, Any]) -> None:
+            nonlocal status_code
             if message["type"] == "http.response.start":
+                status_code = message.get("status")
                 message["headers"].append((b"x-trace-id", trace_id.encode()))
                 message["headers"].append((b"x-request-id", request_id.encode()))
             await send(message)
@@ -68,7 +106,16 @@ class AuditMiddleware:
         scope["request_id"] = request_id
         scope["audit_ctx"] = audit_ctx
 
-        await self.app(scope, receive, send_wrapper)
+        await log_event(AuditAction.REQUEST_RECEIVED, AuditResult.SUCCESS)
+
+        try:
+            await self.app(scope, receive, send_wrapper)
+        finally:
+            await log_event(
+                AuditAction.RESPONSE_SENT,
+                AuditResult.SUCCESS,
+                {"status_code": status_code},
+            )
 
 
 def get_audit_context(scope: Scope) -> AuditContext | None:
