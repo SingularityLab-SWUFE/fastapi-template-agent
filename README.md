@@ -35,6 +35,7 @@ This repo also provides a full-featured, best-practiced backend template for bui
 - **Authentication & Authorization**: Secure JWT-based authentication with role-based access control (RBAC).
 - **Structured Logging**: Production-ready logging with loguru - colored console output with clickable file:line references for development, JSON logs for production.
 - **Caching**: Pluggable caching system with built-in Redis support.
+- **Retry Mechanism**: Automatic retry for network errors and transient failures with exponential backoff using `tenacity`.
 - **Standardized Responses**: Middleware for consistent, unified JSON response formatting across all endpoints.
 - **Custom Error Codes**: Flexible handling of business-specific error codes and messages.
 - **Pagination**: Built-in support for paginating query results using `fastapi-pagination`.
@@ -347,6 +348,39 @@ async def my_handler(
 ```
 
 This allows you to test different configurations by overriding the `get_settings` dependency in your tests.
+
+### Retry
+
+Automatic retry for network errors, timeouts, and 5xx responses using [tenacity](https://github.com/jd/tenacity). Retries up to 3 times with exponential backoff (1-10 seconds).
+
+```python
+import httpx
+from src.retry import retry_on_network, async_retry_on_network
+
+# Decorator for sync functions
+@retry_on_network()
+def fetch_data():
+    response = httpx.get("https://api.example.com/data")
+    response.raise_for_status()
+    return response.json()
+
+# Decorator for async functions
+@retry_on_network()
+async def fetch_user(user_id: int):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"https://api.example.com/users/{user_id}")
+        response.raise_for_status()
+        return response.json()
+
+# Manual retry control (async)
+async def fetch_with_manual_retry():
+    async for attempt in async_retry_on_network():
+        with attempt:
+            async with httpx.AsyncClient() as client:
+                response = await client.get("https://api.example.com/data")
+                response.raise_for_status()
+                return response.json()
+```
 
 ## Development Setup
 
