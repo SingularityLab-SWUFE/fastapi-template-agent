@@ -5,6 +5,7 @@ from .app import AppSettings
 from .auth import AuthSettings
 from .cache import CacheSettings
 from .database import DatabaseSettings
+from .log import LogSettings
 
 
 class Settings(BaseSettings):
@@ -18,3 +19,4 @@ class Settings(BaseSettings):
     auth: AuthSettings = Field(default_factory=AuthSettings)
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
+    log: LogSettings = Field(default_factory=LogSettings)
