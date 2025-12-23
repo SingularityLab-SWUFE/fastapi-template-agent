@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 from starlette.middleware import Middleware
 
+from src.audit.middleware import AuditMiddleware
 from src.auth.oauth import create_oauth_router
 from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
         debug=settings.app.debug,
         lifespan=lifespan,
         middleware=[
+            Middleware(AuditMiddleware),
             Middleware(ResponseWrapperMiddleware),
         ],
     )

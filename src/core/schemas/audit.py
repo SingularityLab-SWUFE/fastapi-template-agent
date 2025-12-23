@@ -16,6 +16,10 @@ class AuditAction(StrEnum):
     RESET_PASSWORD = "reset_password"
     PERMISSION_CHECK = "permission_check"
     ROLE_CHECK = "role_check"
+    REQUEST_RECEIVED = "request_received"
+    RESPONSE_SENT = "response_sent"
+    EXCEPTION = "exception"
+    MIGRATION = "migration"
 
 
 class AuditResult(StrEnum):

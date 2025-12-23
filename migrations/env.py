@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from logging.config import fileConfig
 
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
@@ -51,8 +52,45 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def on_version_apply(connection: Connection, revision: str, direction: str) -> None:
+    user = (
+        context.get_x_argument("user") if hasattr(context, "get_x_argument") else None
+    )
+
+    sql = text(
+        """
+        INSERT INTO audit_logs (occurred_at, action, result, resource_type, resource_id, user_agent, ip, extra)
+        VALUES (:occurred_at, :action, :result, :resource_type, :resource_id, :user_agent, :ip, :extra)
+        """
+    )
+
+    occurred_at = datetime.now(UTC).isoformat()
+
+    connection.execute(
+        sql,
+        {
+            "occurred_at": occurred_at,
+            "action": "migration",
+            "result": "success",
+            "resource_type": "migration",
+            "resource_id": revision,
+            "user_agent": "alembic",
+            "ip": None,
+            "extra": {
+                "direction": direction,
+                "executed_by": user,
+                "revision": revision,
+            },
+        },
+    )
+
+
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        on_version_apply=on_version_apply,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
