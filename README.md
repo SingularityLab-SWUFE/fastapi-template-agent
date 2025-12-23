@@ -33,6 +33,7 @@ This repo also provides a full-featured, best-practiced backend template for bui
 
 - **Modern Tooling Stack**: State-of-the-art setup with `uv` for package management, `just` as task runner, `pre-commit` for git hooks, `pytest` for testing, and more.
 - **Authentication & Authorization**: Secure JWT-based authentication with role-based access control (RBAC).
+- **Structured Logging**: Production-ready logging with loguru - colored console output with clickable file:line references for development, JSON logs for production.
 - **Caching**: Pluggable caching system with built-in Redis support.
 - **Standardized Responses**: Middleware for consistent, unified JSON response formatting across all endpoints.
 - **Custom Error Codes**: Flexible handling of business-specific error codes and messages.
@@ -98,6 +99,25 @@ just agent-rules-sync
 The `pre-commit` hook `agent-rules` runs the same check on commit.
 
 ## Usage Examples
+
+### Structured Logging
+
+Logging system built with [loguru](https://github.com/Delgan/loguru) provides colored console output with clickable file:line references for development and JSON logs for production.
+
+```python
+from loguru import logger # just import loguru
+
+@router.post("/orders")
+async def create_order(order: Order):
+    logger.info(f"Creating order {order.id}")
+    try:
+        result = await process_order(order)
+        logger.bind(order_id=order.id, amount=order.total).info("Order completed")
+        return result
+    except Exception as e:
+        logger.exception("Order processing failed")  # Auto-captures traceback
+        raise
+```
 
 ### Using Cache
 

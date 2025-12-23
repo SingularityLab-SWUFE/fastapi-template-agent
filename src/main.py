@@ -8,7 +8,9 @@ from src.auth.oauth import create_oauth_router
 from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
 from src.core.config import get_settings
+from src.core.router import router as core_router
 from src.handlers import register_exception_handlers
+from src.logging import setup_logging
 from src.responses.middleware import ResponseWrapperMiddleware
 
 from .session import close_db, init_db
@@ -17,6 +19,7 @@ from .session import close_db, init_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
+    setup_logging(log_level=settings.log.level, json_logs=settings.log.json_logs)
     await init_db(settings.db.url, settings.db.echo)
     await init_cache(
         backend=settings.cache.backend,
@@ -53,6 +56,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router, prefix="/auth", tags=["auth"])
     app.include_router(create_oauth_router(settings), prefix="/auth", tags=["auth"])
+    app.include_router(core_router, tags=["core"])
 
     add_pagination(app)
 

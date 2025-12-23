@@ -6,6 +6,7 @@ import pytest
 from fakeredis import FakeAsyncRedis
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,6 +26,13 @@ def settings():
     from src.core.config import get_settings
 
     return get_settings()
+
+
+@pytest.fixture(autouse=True)
+def disable_logging():
+    logger.disable("src")
+    yield
+    logger.enable("src")
 
 
 @pytest.fixture
