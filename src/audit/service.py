@@ -24,11 +24,9 @@ class AuditRepository:
         user_agent: str | None = None,
         ip: str | None = None,
         extra: dict[str, Any] | None = None,
-        trace_id: str | None = None,
         request_id: str | None = None,
     ) -> None:
         audit_log = AuditLog(
-            trace_id=trace_id,
             request_id=request_id,
             actor_id=actor_id,
             action=action,
@@ -57,7 +55,6 @@ class AuditService:
         user_agent: str | None = None,
         ip: str | None = None,
         extra: dict[str, Any] | None = None,
-        trace_id: str | None = None,
         request_id: str | None = None,
     ) -> None:
         try:
@@ -70,7 +67,6 @@ class AuditService:
                 user_agent=user_agent,
                 ip=ip,
                 extra=extra,
-                trace_id=trace_id,
                 request_id=request_id,
             )
         except Exception:
