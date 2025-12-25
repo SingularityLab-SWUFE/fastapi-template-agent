@@ -16,6 +16,7 @@ class AuditAction(StrEnum):
     RESET_PASSWORD = "reset_password"
     PERMISSION_CHECK = "permission_check"
     ROLE_CHECK = "role_check"
+    PROTECTED_RESOURCE_ACCESS = "protected_resource_access"
 
 
 class AuditResult(StrEnum):
@@ -33,6 +34,11 @@ class AuditLog(SQLModel, table=True):
         default_factory=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
+    )
+    request_id: str | None = Field(
+        default=None,
+        max_length=36,
+        description="Request correlation ID - groups all audit logs from a single HTTP request",
     )
     actor_id: int | None = Field(default=None, foreign_key="users.id", index=True)
     action: str = Field(nullable=False, max_length=64, index=True)

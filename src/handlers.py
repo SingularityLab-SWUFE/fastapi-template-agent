@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
@@ -5,6 +7,8 @@ from fastapi.responses import JSONResponse
 from src.core.schemas.error import error_code_to_http_status
 from src.exceptions import BusinessException
 from src.responses.base import Response
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["register_exception_handlers"]
 
