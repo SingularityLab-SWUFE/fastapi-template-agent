@@ -173,7 +173,7 @@ async def create_item(item: dict):
 
 **1. Define error codes:**
 ```python
-# src/core/schemas/error.py
+# src/shared/errors.py
 class ErrorCode(IntEnum):
     # Your custom codes
     PRODUCT_OUT_OF_STOCK = 50101
@@ -190,7 +190,7 @@ ERROR_CODE_TO_HTTP = {
 
 **2. Raise business exceptions:**
 ```python
-from src.core.schemas.error import ErrorCode
+from src.shared.errors import ErrorCode
 from src.exceptions import BusinessException
 
 @router.post("/orders")
@@ -237,7 +237,7 @@ from fastapi_pagination.ext.sqlalchemy import apaginate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.schemas import User
+from src.auth.schemas import User
 from src.session import get_session
 
 router = APIRouter()
@@ -255,7 +255,7 @@ Authentication is well-implemented by `fastapi-users`, so use `current_user` and
 ```python
 from fastapi import APIRouter, Depends
 from src.auth import current_user, current_superuser
-from src.core.schemas import User
+from src.auth.schemas import User
 
 router = APIRouter()
 
