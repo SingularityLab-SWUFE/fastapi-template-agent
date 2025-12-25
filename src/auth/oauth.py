@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
 
-from src.core.config import Settings
+from src.config import Settings
 
 from . import fastapi_users
 from .backend import auth_backend

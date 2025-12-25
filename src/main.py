@@ -7,7 +7,7 @@ from starlette.middleware import Middleware
 from src.auth.oauth import create_oauth_router
 from src.auth.router import router as auth_router
 from src.cache import close_cache, init_cache
-from src.core.config import get_settings
+from src.config import get_settings
 from src.core.router import router as core_router
 from src.handlers import register_exception_handlers
 from src.logging import setup_logging

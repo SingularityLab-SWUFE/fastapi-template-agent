@@ -31,7 +31,7 @@ def test_settings_created_by_env_file(env_example_path):
     """
     Use specified env file to create a custom Settings instance.
     """
-    from src.core.config.settings import Settings
+    from src.config.settings import Settings
 
     custom_settings = Settings(_env_file=env_example_path)
 
@@ -45,7 +45,7 @@ def test_settings_loading_env_variables():
     """
     Use env variables to create the Settings instance.
     """
-    from src.core.config import get_settings
+    from src.config import get_settings
 
     get_settings.cache_clear()
     settings = get_settings()

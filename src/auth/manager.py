@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
 
-from src.core.config import Settings, get_settings
+from src.config import Settings, get_settings
 from src.core.schemas import User
 
 from fastapi_users.db import SQLAlchemyUserDatabase

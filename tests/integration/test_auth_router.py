@@ -119,7 +119,7 @@ async def test_refresh_token_inactive_user(test_client, test_user, test_db):
 
 async def test_reset_password_revokes_tokens(test_client, test_user, local_cache):
     from src.auth.backend import RefreshTokenManager
-    from src.core.config import get_settings
+    from src.config import get_settings
 
     settings = get_settings()
     login_response = await test_client.post(

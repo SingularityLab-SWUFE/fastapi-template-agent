@@ -336,7 +336,7 @@ async def update_post(post_id: int, data: dict):
 
 ```python
 from fastapi import Depends
-from src.core.config import Settings, get_settings
+from src.config import Settings, get_settings
 from src.cache import CacheProtocol, get_cache
 
 async def my_handler(
