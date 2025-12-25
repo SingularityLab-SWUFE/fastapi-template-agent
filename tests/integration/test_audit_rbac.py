@@ -4,10 +4,10 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 
 from src.auth import require_permissions, require_roles
-from src.auth.schemas import User
+from src.auth.models import User
 from src.audit.schemas import AuditAction, AuditLog, AuditResult
 from src.shared.errors import ErrorCode
-from src.auth.schemas import Permission, RolePermission, UserRole
+from src.auth.models import Permission, RolePermission, UserRole
 
 
 @pytest.fixture

@@ -40,6 +40,26 @@ This repo also provides a full-featured, best-practiced backend template for bui
 - **Custom Error Codes**: Flexible handling of business-specific error codes and messages.
 - **Pagination**: Built-in support for paginating query results using `fastapi-pagination`.
 
+### DDD guidelines
+
+This repo follows **Domain-Driven Design (DDD)** principles to structure the codebase for better maintainability and scalability:
+
+- **Domain Modules**: Each domain (e.g., `auth/`, `users/`) has its own module containing models(SQLTable), schemas (Request/Response), services.
+- **Representation Layer**: `api/` module handles HTTP requests, routing, and controllers. You can add `grpc`, `graphql` in this layer as needed.
+- **Core Layer**: `core/` module contains business-related domains.
+
+The `shared/` module contains **cross-cutting concerns** used by multiple domains. Before adding code to `shared/`, it must meet these criteria:
+
+**✅ Belongs in `shared/`:**
+- Used by 3+ domains
+- Pure utility with no business logic
+- Infrastructure-level abstractions (error codes, mixins, cache keys)
+
+**❌ Does NOT belong in `shared/`:**
+- Domain-specific logic (put in domain directory)
+- Used by only 1-2 domains (co-locate with primary domain)
+- Business rules or policies
+
 ## Use
 
 You can **clone or fork** the repo as it is, or use `copier` to create a new project from the template:

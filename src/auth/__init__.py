@@ -5,7 +5,7 @@ from src.audit import AuditService, get_audit_service
 from src.audit.dependencies import generate_request_id
 from src.audit.schemas import AuditAction, AuditResult
 from src.audit.service import extract_client_info
-from src.auth.schemas import User
+from src.auth.models import User
 
 from .backend import auth_backend
 from .manager import get_user_manager
@@ -68,10 +68,25 @@ async def current_superuser(
     return user
 
 
+from .models import (  # noqa: E402
+    OAuthAccount,
+    Permission,
+    Role,
+    RolePermission,
+    UserRole,
+)
 from .rbac import (  # noqa: E402
+    owner_or_perm,
     require_permissions,
     require_roles,
-    owner_or_perm,
+)
+from .schemas import (  # noqa: E402
+    AccessTokenResponse,
+    MessageResponse,
+    TokenResponse,
+    UserCreate,
+    UserRead,
+    UserUpdate,
 )
 
 __all__ = [
@@ -81,4 +96,16 @@ __all__ = [
     "require_permissions",
     "require_roles",
     "owner_or_perm",
+    "User",
+    "OAuthAccount",
+    "Permission",
+    "Role",
+    "RolePermission",
+    "UserRole",
+    "UserRead",
+    "UserCreate",
+    "UserUpdate",
+    "TokenResponse",
+    "AccessTokenResponse",
+    "MessageResponse",
 ]

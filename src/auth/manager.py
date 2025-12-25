@@ -5,7 +5,7 @@ from fastapi_users import BaseUserManager, IntegerIDMixin
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.schemas import OAuthAccount, User
+from src.auth.models import OAuthAccount, User
 from src.config import Settings, get_settings
 from src.session import get_session
 

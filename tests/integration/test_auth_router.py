@@ -93,7 +93,7 @@ async def test_logout_success(test_client, test_user):
 
 
 async def test_refresh_token_inactive_user(test_client, test_user, test_db):
-    from src.auth.schemas import User
+    from src.auth.models import User
 
     login_response = await test_client.post(
         "/auth/jwt/login",
