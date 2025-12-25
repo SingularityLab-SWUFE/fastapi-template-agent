@@ -25,7 +25,11 @@ def upgrade() -> None:
             "request_id", sqlmodel.sql.sqltypes.AutoString(length=36), nullable=True
         ),
     )
+    op.create_index(
+        "ix_audit_logs_request_id", "audit_logs", ["request_id"], unique=False
+    )
 
 
 def downgrade() -> None:
+    op.drop_index("ix_audit_logs_request_id", table_name="audit_logs")
     op.drop_column("audit_logs", "request_id")

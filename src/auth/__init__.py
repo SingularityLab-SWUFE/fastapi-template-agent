@@ -16,7 +16,7 @@ fastapi_users = FastAPIUsers[User, int](
 )
 
 _current_user_base = fastapi_users.current_user(active=True)
-current_superuser = fastapi_users.current_user(active=True, superuser=True)
+_current_superuser_base = fastapi_users.current_user(active=True, superuser=True)
 
 
 async def current_user(
@@ -37,6 +37,31 @@ async def current_user(
         extra={
             "method": request.method,
             "path": request.url.path,
+        },
+    )
+
+    return user
+
+
+async def current_superuser(
+    request: Request,
+    user: User = Depends(_current_superuser_base),
+    audit_service: AuditService = Depends(get_audit_service),
+    request_id: str = Depends(generate_request_id),
+) -> User:
+    user_agent, ip = extract_client_info(request)
+
+    await audit_service.log(
+        action=AuditAction.PROTECTED_RESOURCE_ACCESS,
+        result=AuditResult.SUCCESS,
+        actor_id=user.id,
+        request_id=request_id,
+        user_agent=user_agent,
+        ip=ip,
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "superuser": True,
         },
     )
 

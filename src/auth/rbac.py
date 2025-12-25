@@ -5,7 +5,7 @@ from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.audit import AuditService, get_audit_service
+from src.audit import AuditService, generate_request_id, get_audit_service
 from src.audit.service import extract_client_info
 from src.core.schemas import User
 from src.core.schemas.audit import AuditAction, AuditResult
@@ -164,9 +164,9 @@ def require_permissions(
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
         audit_service: AuditService = Depends(get_audit_service),
+        request_id: str = Depends(generate_request_id),
     ):
         user_agent, ip = extract_client_info(request)
-        request_id = getattr(request.state, "request_id", None)
 
         if bypass_superuser and user.is_superuser:
             await audit_service.log(
@@ -225,9 +225,9 @@ def require_roles(
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
         audit_service: AuditService = Depends(get_audit_service),
+        request_id: str = Depends(generate_request_id),
     ):
         user_agent, ip = extract_client_info(request)
-        request_id = getattr(request.state, "request_id", None)
 
         if bypass_superuser and user.is_superuser:
             await audit_service.log(
@@ -284,9 +284,9 @@ def owner_or_perm(
         permission_service: PermissionService = Depends(get_permission_service),
         user: User = Depends(current_user),
         audit_service: AuditService = Depends(get_audit_service),
+        request_id: str = Depends(generate_request_id),
     ):
         user_agent, ip = extract_client_info(request)
-        request_id = getattr(request.state, "request_id", None)
 
         if bypass_superuser and user.is_superuser:
             await audit_service.log(

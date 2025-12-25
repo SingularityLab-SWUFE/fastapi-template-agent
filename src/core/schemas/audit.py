@@ -35,7 +35,11 @@ class AuditLog(SQLModel, table=True):
         nullable=False,
         index=True,
     )
-    request_id: str | None = Field(default=None, max_length=36)
+    request_id: str | None = Field(
+        default=None,
+        max_length=36,
+        description="Request correlation ID - groups all audit logs from a single HTTP request",
+    )
     actor_id: int | None = Field(default=None, foreign_key="users.id", index=True)
     action: str = Field(nullable=False, max_length=64, index=True)
     resource_type: str | None = Field(default=None, max_length=64)
