@@ -6,10 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.audit import AuditService, generate_request_id, get_audit_service
+from src.audit.schemas import AuditAction, AuditResult
 from src.audit.service import extract_client_info
-from src.core.schemas import User
-from src.core.schemas.audit import AuditAction, AuditResult
-from src.core.schemas.rbac import Permission, Role, RolePermission, UserRole
+from src.auth.schemas import Permission, Role, RolePermission, User, UserRole
 from src.exceptions import InsufficientPermissionException, InsufficientRoleException
 from src.session import get_session
 

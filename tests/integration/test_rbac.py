@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
 from src.auth import owner_or_perm, require_permissions, require_roles
-from src.core.schemas import User
-from src.core.schemas.error import ErrorCode
-from src.core.schemas.rbac import Permission, RolePermission, UserRole
+from src.auth.schemas import User
+from src.shared.errors import ErrorCode
+from src.auth.schemas import Permission, RolePermission, UserRole
 
 
 @pytest.fixture

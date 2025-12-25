@@ -1,6 +1,6 @@
 import pytest
 
-from src.core.schemas.error import ErrorCode
+from src.shared.errors import ErrorCode
 from src.exceptions import (
     BusinessException,
     InsufficientPermissionException,

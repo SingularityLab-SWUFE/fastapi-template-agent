@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from src.core.schemas.error import ErrorCode
+from src.shared.errors import ErrorCode
 
 
 class BusinessException(Exception):

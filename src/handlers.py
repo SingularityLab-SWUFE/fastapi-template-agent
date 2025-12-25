@@ -4,9 +4,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.core.schemas.error import error_code_to_http_status
 from src.exceptions import BusinessException
 from src.responses.base import Response
+from src.shared.errors import error_code_to_http_status
 
 logger = logging.getLogger(__name__)
 

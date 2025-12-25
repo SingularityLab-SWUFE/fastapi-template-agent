@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from src.audit.service import AuditRepository, AuditService
-from src.core.schemas.audit import AuditAction, AuditResult
+from src.audit.schemas import AuditAction, AuditResult
 
 
 @pytest.fixture

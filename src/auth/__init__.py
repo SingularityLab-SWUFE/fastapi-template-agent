@@ -3,9 +3,9 @@ from fastapi_users import FastAPIUsers
 
 from src.audit import AuditService, get_audit_service
 from src.audit.dependencies import generate_request_id
+from src.audit.schemas import AuditAction, AuditResult
 from src.audit.service import extract_client_info
-from src.core.schemas import User
-from src.core.schemas.audit import AuditAction, AuditResult
+from src.auth.schemas import User
 
 from .backend import auth_backend
 from .manager import get_user_manager

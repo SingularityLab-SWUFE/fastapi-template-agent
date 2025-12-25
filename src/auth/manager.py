@@ -2,14 +2,11 @@ from collections.abc import AsyncGenerator
 
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
-
-from src.config import Settings, get_settings
-from src.core.schemas import User
-
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.schemas import OAuthAccount
+from src.auth.schemas import OAuthAccount, User
+from src.config import Settings, get_settings
 from src.session import get_session
 
 
