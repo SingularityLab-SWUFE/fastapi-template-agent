@@ -4,8 +4,8 @@ from httpx_oauth.clients.google import GoogleOAuth2
 
 from src.config import Settings
 
-from . import fastapi_users
-from .backend import auth_backend
+from src.auth import fastapi_users
+from src.auth.backend import auth_backend
 
 
 def create_oauth_router(settings: Settings) -> APIRouter:

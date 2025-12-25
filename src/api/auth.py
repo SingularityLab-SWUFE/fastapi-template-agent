@@ -3,14 +3,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from src.audit import AuditService, get_audit_service
 from src.audit.service import extract_client_info
-from src.core.schemas.audit import AuditAction, AuditResult
-from src.core.schemas.error import ErrorCode
-from src.exceptions import BusinessException
-
-from . import fastapi_users
-from .backend import RefreshTokenManager, get_jwt_strategy, get_refresh_token_manager
-from .manager import UserManager, get_user_manager
-from .schemas import (
+from src.auth import fastapi_users
+from src.auth.backend import (
+    RefreshTokenManager,
+    get_jwt_strategy,
+    get_refresh_token_manager,
+)
+from src.auth.manager import UserManager, get_user_manager
+from src.auth.schemas import (
     AccessTokenResponse,
     MessageResponse,
     TokenResponse,
@@ -18,6 +18,9 @@ from .schemas import (
     UserRead,
     UserUpdate,
 )
+from src.core.schemas.audit import AuditAction, AuditResult
+from src.core.schemas.error import ErrorCode
+from src.exceptions import BusinessException
 
 router = APIRouter()
 
