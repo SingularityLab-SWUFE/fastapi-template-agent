@@ -110,7 +110,7 @@ async def superuser_user(test_db, rbac_data):
 async def rbac_audit_client(
     test_db, local_cache, admin_user, regular_user, superuser_user
 ):
-    from src.auth.router import router as auth_router
+    from src.api import auth_router
     from src.cache import get_cache
     from src.handlers import register_exception_handlers
     from src.responses.middleware import ResponseWrapperMiddleware
