@@ -12,7 +12,7 @@ from fastapi_users.authentication import (
 )
 
 from src.cache import CacheProtocol, get_cache
-from src.core.config import Settings, get_settings
+from src.config import Settings, get_settings
 from src.core.schemas import redis_keys
 
 
