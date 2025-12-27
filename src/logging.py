@@ -40,5 +40,13 @@ def setup_logging(log_level: str = "INFO", json_logs: bool = False) -> None:
         )
 
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
-    for logger_name in ["uvicorn", "uvicorn.access", "uvicorn.error"]:
-        logging.getLogger(logger_name).handlers = [InterceptHandler()]
+    for logger_name in [
+        "uvicorn",
+        "uvicorn.access",
+        "uvicorn.error",
+        "uvicorn.lifespan",
+        "uvicorn.server",
+    ]:
+        uvicorn_logger = logging.getLogger(logger_name)
+        uvicorn_logger.handlers = [InterceptHandler()]
+        uvicorn_logger.propagate = False
