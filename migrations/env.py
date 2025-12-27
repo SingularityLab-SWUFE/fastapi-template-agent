@@ -8,8 +8,6 @@ from sqlmodel import SQLModel
 from alembic import context
 from src.config import get_settings
 
-from src.core.schemas import *  # noqa: F403
-
 config = context.config
 
 # Get settings before setting URL

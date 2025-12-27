@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, RequestValidationError
 from httpx import AsyncClient, ASGITransport
 
-from src.core.schemas.error import ErrorCode
+from src.shared.errors import ErrorCode
 from src.exceptions import BusinessException
 from src.handlers import register_exception_handlers
 

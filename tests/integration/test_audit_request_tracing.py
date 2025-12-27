@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
 from src.auth import current_user
-from src.core.schemas import User
-from src.core.schemas.audit import AuditAction, AuditLog, AuditResult
+from src.auth.models import User
+from src.audit.schemas import AuditAction, AuditLog, AuditResult
 
 
 @pytest.fixture
@@ -117,7 +117,7 @@ async def test_rbac_audit_includes_request_id(
     test_app_with_protected_route, test_user, test_db
 ):
     from src.auth import require_permissions
-    from src.core.schemas.rbac import Permission, RolePermission
+    from src.auth.models import Permission, RolePermission
     from src.main import app
 
     async with test_db() as session:
@@ -129,7 +129,7 @@ async def test_rbac_audit_includes_request_id(
         session.add(role_perm)
         await session.commit()
 
-        from src.core.schemas.rbac import UserRole
+        from src.auth.models import UserRole
 
         user_role = UserRole(user_id=test_user.id, role_id=1)
         session.add(user_role)

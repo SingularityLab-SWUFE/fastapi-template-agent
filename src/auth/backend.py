@@ -13,7 +13,7 @@ from fastapi_users.authentication import (
 
 from src.cache import CacheProtocol, get_cache
 from src.config import Settings, get_settings
-from src.core.schemas import redis_keys
+from src.shared.redis_keys import redis_keys
 
 
 def get_jwt_strategy(settings=Depends(get_settings)) -> JWTStrategy:

@@ -4,7 +4,7 @@ Standard fastapi-users routes (/register, /reset-password, /verify, /users)
 are tested by the library itself and not duplicated here.
 """
 
-from src.core.schemas.error import ErrorCode
+from src.shared.errors import ErrorCode
 
 
 async def test_login_success(test_client, test_user):
@@ -93,7 +93,7 @@ async def test_logout_success(test_client, test_user):
 
 
 async def test_refresh_token_inactive_user(test_client, test_user, test_db):
-    from src.core.schemas import User
+    from src.auth.models import User
 
     login_response = await test_client.post(
         "/auth/jwt/login",

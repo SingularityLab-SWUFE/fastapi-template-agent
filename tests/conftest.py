@@ -128,7 +128,7 @@ async def redis_cache():
 async def test_user(test_db):
     from fastapi_users.password import PasswordHelper
 
-    from src.core.schemas import User
+    from src.auth.models import User
 
     password_helper = PasswordHelper()
     hashed_password = password_helper.hash("testpassword123")

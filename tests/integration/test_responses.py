@@ -2,7 +2,7 @@ import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from httpx import AsyncClient, ASGITransport
-from src.core.schemas.error import ErrorCode
+from src.shared.errors import ErrorCode
 from src.exceptions import BusinessException
 
 

@@ -4,7 +4,7 @@ from fastapi import Depends, Request
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.schemas.audit import AuditLog
+from src.audit.schemas import AuditLog
 from src.session import get_session
 
 
