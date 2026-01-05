@@ -7,9 +7,12 @@ dependencies = [
     "alembic>=1.17.2",
     "asyncpg>=0.31.0",
     "fastapi>=0.115.0",
+    "fastapi-pagination[sqlalchemy]>=0.15.3",
     "fastapi-users[sqlalchemy]>=15.0.1",
     "httpx-oauth>=0.16.1",
+    "loguru>=0.7.3",
     "pydantic-settings>=2.12.0",
+    "tenacity>=9.0.0",
     "redis[hiredis]>=7.1.0",
     "sqlmodel>=0.0.27",
     "uvicorn[standard]>=0.32.0",
@@ -45,6 +48,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "integration: marks tests as integration tests",
+]
 
 [[tool.uv.index]]
 name = "tsinghua"
