@@ -1,9 +1,11 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, Column, Text
+from sqlalchemy import JSON, Column, DateTime, Text
 from sqlmodel import Field, SQLModel
+
+from src.shared.mixins import now
 
 
 class AuditAction(StrEnum):
@@ -31,7 +33,8 @@ class AuditLog(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     occurred_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+        default_factory=now,
+        sa_type=DateTime(timezone=True),
         nullable=False,
         index=True,
     )

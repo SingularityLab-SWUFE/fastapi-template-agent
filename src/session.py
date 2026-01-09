@@ -17,8 +17,6 @@ async def init_db(url: str, echo: bool = False) -> None:
         @event.listens_for(engine.sync_engine, "connect")
         def set_sqlite_pragma(dbapi_conn, connection_record):
             cursor = dbapi_conn.cursor()
-            # By default, sqlite disables foreign key constraint enforcement
-            # see https://www.sqlite.org/foreignkeys.html#fk_enable
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
 
