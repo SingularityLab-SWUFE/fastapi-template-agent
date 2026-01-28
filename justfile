@@ -27,6 +27,10 @@ run port=PORT:
 @test:
     uv run --frozen pytest -xvs tests
 
+# Run locust
+@benchmark:
+    uv run locust -f tests/locustfile.py
+
 # Generate database migration
 @db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"

@@ -21,6 +21,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "fakeredis>=2.32.1",
+    "locust>=2.32.5",
     "pytest>=8.3.3",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=6.1.1",
@@ -48,9 +49,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-markers = [
-    "integration: marks tests as integration tests",
-]
+markers = ["integration: marks tests as integration tests"]
 
 [[tool.uv.index]]
 name = "tsinghua"
