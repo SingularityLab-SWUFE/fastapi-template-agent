@@ -402,6 +402,12 @@ async def fetch_with_manual_retry():
                 return response.json()
 ```
 
+### Testing
+
+`pytest` is used as the testing framework.
+
+We use `locust` for integrated load testing. User behaviors are defined in `tests/locustfile.py`, you can use it to simulate concurrent users, and get QPS/response metrics for analysis.
+
 ## Development Setup
 
 - Python >= 3.12
