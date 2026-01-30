@@ -57,7 +57,30 @@ async def test_refresh_token_success(test_client, test_user):
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "Bearer"
-    assert "refresh_token" not in data
+    assert "refresh_token" in data
+
+
+async def test_refresh_token_rotation(test_client, test_user):
+    login_response = await test_client.post(
+        "/auth/jwt/login",
+        data={"username": "test@example.com", "password": "testpassword123"},
+    )
+    old_refresh_token = login_response.json()["refresh_token"]
+
+    refresh_response = await test_client.post(
+        "/auth/jwt/refresh", params={"refresh_token": old_refresh_token}
+    )
+    new_refresh_token = refresh_response.json()["refresh_token"]
+
+    old_token_response = await test_client.post(
+        "/auth/jwt/refresh", params={"refresh_token": old_refresh_token}
+    )
+    assert old_token_response.status_code == 401
+
+    new_token_response = await test_client.post(
+        "/auth/jwt/refresh", params={"refresh_token": new_refresh_token}
+    )
+    assert new_token_response.status_code == 200
 
 
 async def test_refresh_token_invalid(test_client):
