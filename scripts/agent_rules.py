@@ -18,7 +18,6 @@ def _normalized_bytes(path: Path) -> bytes:
 
 def _targets(root: Path) -> list[Path]:
     return [
-        root / "CLAUDE.md",
         root / ".clinerules",
         root / ".cursorrules",
         root / ".github" / "copilot-instructions.md",
