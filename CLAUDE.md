@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 Claude Code uses modular configuration files in `.claude/` directory:
 
-- **Rules**: [@.claude/rules.md](.claude/rules.md)
+- **Rules**: [@.claude/rules.md](/.claude/rules.md) (Always loaded)
 - **Skills**: Available task-specific workflows (load on-demand via `.claude/skills/`)
   - `backend-patterns` - DDD, caching, auth, error handling
   - `pytest-patterns` - Testing guidelines
