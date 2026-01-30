@@ -22,10 +22,5 @@ class TokenResponse(BaseModel):
     token_type: Literal["Bearer"] = "Bearer"
 
 
-class AccessTokenResponse(BaseModel):
-    access_token: str
-    token_type: Literal["Bearer"] = "Bearer"
-
-
 class MessageResponse(BaseModel):
     detail: str

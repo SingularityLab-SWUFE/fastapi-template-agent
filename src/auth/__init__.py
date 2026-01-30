@@ -81,7 +81,6 @@ from .rbac import (  # noqa: E402
     require_roles,
 )
 from .schemas import (  # noqa: E402
-    AccessTokenResponse,
     MessageResponse,
     TokenResponse,
     UserCreate,
@@ -106,6 +105,5 @@ __all__ = [
     "UserCreate",
     "UserUpdate",
     "TokenResponse",
-    "AccessTokenResponse",
     "MessageResponse",
 ]

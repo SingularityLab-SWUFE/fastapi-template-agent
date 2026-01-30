@@ -125,8 +125,8 @@ async def refresh_jwt(
         raise BusinessException(ErrorCode.USER_INACTIVE, "User inactive")
 
     access_token = await strategy.write_token(user)
-    await refresh_manager.revoke_token(refresh_token)
     new_refresh_token = await refresh_manager.create_refresh_token(user.id, user_agent)
+    await refresh_manager.revoke_token(refresh_token)
 
     await audit_service.log(
         action=AuditAction.REFRESH,
