@@ -57,7 +57,7 @@ async def test_refresh_token_success(test_client, test_user):
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "Bearer"
-    assert "refresh_token" not in data
+    assert "refresh_token" in data
 
 
 async def test_refresh_token_invalid(test_client):

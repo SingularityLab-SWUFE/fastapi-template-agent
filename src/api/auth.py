@@ -12,7 +12,6 @@ from src.auth.backend import (
 )
 from src.auth.manager import UserManager, get_user_manager
 from src.auth.schemas import (
-    AccessTokenResponse,
     MessageResponse,
     TokenResponse,
     UserCreate,
@@ -100,7 +99,7 @@ async def refresh_jwt(
     strategy=Depends(get_jwt_strategy),
     refresh_manager: RefreshTokenManager = Depends(get_refresh_token_manager),
     audit_service: AuditService = Depends(get_audit_service),
-) -> AccessTokenResponse:
+) -> TokenResponse:
     user_agent, ip = extract_client_info(request)
 
     user_id = await refresh_manager.verify_refresh_token(refresh_token)
@@ -126,6 +125,8 @@ async def refresh_jwt(
         raise BusinessException(ErrorCode.USER_INACTIVE, "User inactive")
 
     access_token = await strategy.write_token(user)
+    await refresh_manager.revoke_token(refresh_token)
+    new_refresh_token = await refresh_manager.create_refresh_token(user.id, user_agent)
 
     await audit_service.log(
         action=AuditAction.REFRESH,
@@ -135,7 +136,7 @@ async def refresh_jwt(
         ip=ip,
     )
 
-    return AccessTokenResponse(access_token=access_token, token_type="Bearer")
+    return TokenResponse(access_token=access_token, refresh_token=new_refresh_token)
 
 
 @router.post("/jwt/logout")
