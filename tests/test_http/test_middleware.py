@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 from httpx import ASGITransport, AsyncClient
 
-from src.responses.middleware import ResponseWrapperMiddleware
+from src.http.middleware import ResponseWrapperMiddleware
 
 
 @pytest.mark.asyncio

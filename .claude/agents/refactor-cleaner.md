@@ -178,6 +178,6 @@ def test_old_auth_flow():  # dead: tests removed feature
 When working in this FastAPI/DDD codebase:
 - Respect domain boundaries (auth/, users/, etc.)
 - Keep cross-cutting concerns in shared/ only if used by 3+ domains
-- Preserve the separation between api/ (representation) and core/ (business logic)
+- Preserve the separation between http/ (representation) and core/ (business logic)
 - Don't remove code from RBAC, caching, or retry mechanisms without careful verification
 - Keep diffs minimal, scope strictly to cleanup, no unrelated changes

@@ -5,7 +5,7 @@ from httpx import AsyncClient, ASGITransport
 
 from src.shared.errors import ErrorCode
 from src.exceptions import BusinessException
-from src.handlers import register_exception_handlers
+from src.http.handlers import register_exception_handlers
 
 
 def test_register_all_handlers(base_app: FastAPI):

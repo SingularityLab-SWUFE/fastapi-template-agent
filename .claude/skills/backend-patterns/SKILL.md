@@ -9,7 +9,7 @@ description: DDD structure, caching, auth, error handling, and common backend pa
 
 ### DDD Structure
 - **Domain Modules**: Each domain (e.g., `auth/`, `users/`) contains models (SQLTable), schemas (Request/Response), services.
-- **Representation Layer**: `api/` handles HTTP requests, routing, controllers.
+- **Representation Layer**: `http/` handles HTTP requests, routing, controllers.
 - **Core Layer**: `core/` contains business-related domains.
 
 ### Shared Module Guidelines
@@ -54,7 +54,7 @@ async def handler(cache: CacheProtocol = Depends(get_cache)):
 All responses wrapped in `{code, msg, data}`:
 
 ```python
-from src.responses import Response
+from src.http import Response
 
 # Return raw data (middleware wraps)
 return [{"id": 1}]
