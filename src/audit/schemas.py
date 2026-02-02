@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy import JSON, Column, DateTime, Text
 from sqlmodel import Field, SQLModel
 
-from src.shared.mixins import now
+from src.mixins import now
 
 
 class AuditAction(StrEnum):
