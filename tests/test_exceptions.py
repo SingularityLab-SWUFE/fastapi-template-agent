@@ -1,12 +1,12 @@
 import pytest
 
 from src.shared.errors import ErrorCode
-from src.exceptions import (
-    BusinessException,
+from src.auth.exceptions import (
     InsufficientPermissionException,
     InsufficientRoleException,
     InvalidPasswordException,
 )
+from src.exceptions import BusinessException
 
 
 @pytest.mark.parametrize(
