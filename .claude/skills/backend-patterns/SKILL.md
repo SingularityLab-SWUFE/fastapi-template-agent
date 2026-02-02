@@ -1,3 +1,8 @@
+---
+name: backend-patterns
+description: DDD structure, caching, auth, error handling, and common backend patterns
+---
+
 # Backend Patterns
 
 ## Architecture
