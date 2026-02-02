@@ -1,3 +1,8 @@
+---
+name: pytest-patterns
+description: Testing guidelines, fixtures, markers, and pytest best practices
+---
+
 # Pytest Patterns
 
 ## Running Tests
