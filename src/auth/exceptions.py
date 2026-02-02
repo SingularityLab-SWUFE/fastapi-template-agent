@@ -4,15 +4,6 @@ from src.exceptions import BusinessException
 from src.shared.errors import ErrorCode
 
 
-class InvalidPasswordException(BusinessException):
-    def __init__(self, remaining_attempts: int):
-        super().__init__(
-            code=ErrorCode.AUTH_INVALID_PASSWORD,
-            msg=f"Invalid password, {remaining_attempts} attempts remaining",
-            data={"remaining_attempts": remaining_attempts},
-        )
-
-
 class InsufficientPermissionException(BusinessException):
     def __init__(self, required: Sequence[str]):
         super().__init__(
