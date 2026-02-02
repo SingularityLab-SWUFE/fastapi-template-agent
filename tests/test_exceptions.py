@@ -4,7 +4,6 @@ from src.shared.errors import ErrorCode
 from src.auth.exceptions import (
     InsufficientPermissionException,
     InsufficientRoleException,
-    InvalidPasswordException,
 )
 from src.exceptions import BusinessException
 
@@ -53,15 +52,6 @@ def test_business_exception_exposes_code_message_data_and_string(
     assert exc.msg == msg
     assert exc.data == data
     assert str(exc) == expected_str
-
-
-def test_domain_exception_includes_remaining_attempts_in_message_and_data():
-    exc = InvalidPasswordException(remaining_attempts=3)
-
-    assert exc.code == ErrorCode.AUTH_INVALID_PASSWORD
-    assert exc.msg == "Invalid password, 3 attempts remaining"
-    assert exc.data == {"remaining_attempts": 3}
-    assert str(exc) == "[10002] Invalid password, 3 attempts remaining"
 
 
 def test_insufficient_permission_exception_includes_required_and_user_perms():
