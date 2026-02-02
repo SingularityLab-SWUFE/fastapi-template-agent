@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from sqlmodel import Field, SQLModel
 
-from src.shared.mixins import TimestampMixin
+from src.mixins import TimestampMixin
 
 
 class User(SQLModel, TimestampMixin, table=True):
