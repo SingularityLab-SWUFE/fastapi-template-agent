@@ -17,7 +17,7 @@ import pytest
 def test_response_success_factory_sets_fields(
     factory_kwargs, expected_code, expected_msg, expected_data
 ):
-    from src.responses.base import Response
+    from src.http.response import Response
 
     response = Response.success(**factory_kwargs)
 
@@ -46,7 +46,7 @@ def test_response_success_factory_sets_fields(
 def test_response_error_factory_sets_fields(
     factory_kwargs, expected_code, expected_msg, expected_data
 ):
-    from src.responses.base import Response
+    from src.http.response import Response
 
     response = Response.error(**factory_kwargs)
 
@@ -57,7 +57,7 @@ def test_response_error_factory_sets_fields(
 
 def test_response_model_dump():
     """Test Response.model_dump() returns correct dictionary."""
-    from src.responses.base import Response
+    from src.http.response import Response
 
     response = Response.success(data={"test": "data"}, msg="OK", code=200)
     dumped = response.model_dump()
@@ -71,7 +71,7 @@ def test_response_model_dump():
 
 def test_response_generic_types():
     """Test Response with different generic types."""
-    from src.responses.base import Response
+    from src.http.response import Response
 
     response_str = Response.success(data="string data")
     assert response_str.data == "string data"
@@ -88,7 +88,7 @@ def test_response_generic_types():
 
 def test_response_with_none_data():
     """Test Response when data is explicitly None."""
-    from src.responses.base import Response
+    from src.http.response import Response
 
     response = Response.success(data=None)
     assert response.data is None

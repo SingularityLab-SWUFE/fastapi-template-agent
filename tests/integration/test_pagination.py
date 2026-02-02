@@ -13,8 +13,8 @@ from src.session import get_session
 @pytest.fixture
 async def pagination_client(test_db, local_cache, test_user):
     from src.cache import get_cache
-    from src.handlers import register_exception_handlers
-    from src.responses.middleware import ResponseWrapperMiddleware
+    from src.http.handlers import register_exception_handlers
+    from src.http.middleware import ResponseWrapperMiddleware
 
     app = FastAPI()
     app.add_middleware(ResponseWrapperMiddleware)

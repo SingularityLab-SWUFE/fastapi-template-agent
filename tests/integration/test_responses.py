@@ -74,7 +74,7 @@ async def test_middleware_skips_docs_paths(app_with_middleware: FastAPI):
 async def test_middleware_leaves_already_wrapped_response(
     app_with_middleware: FastAPI,
 ):
-    from src.responses.base import Response
+    from src.http.response import Response
 
     @app_with_middleware.get("/api/already-unified")
     async def already_unified_endpoint():

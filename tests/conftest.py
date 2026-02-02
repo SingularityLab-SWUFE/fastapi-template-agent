@@ -42,7 +42,7 @@ def base_app() -> FastAPI:
 
 @pytest.fixture
 def app_with_middleware(base_app: FastAPI) -> FastAPI:
-    from src.responses import ResponseWrapperMiddleware
+    from src.http.middleware import ResponseWrapperMiddleware
 
     base_app.add_middleware(ResponseWrapperMiddleware)
     return base_app
@@ -50,7 +50,7 @@ def app_with_middleware(base_app: FastAPI) -> FastAPI:
 
 @pytest.fixture
 def app_with_handlers(base_app: FastAPI) -> FastAPI:
-    from src.handlers import register_exception_handlers
+    from src.http.handlers import register_exception_handlers
 
     register_exception_handlers(base_app)
     return base_app
@@ -58,8 +58,8 @@ def app_with_handlers(base_app: FastAPI) -> FastAPI:
 
 @pytest.fixture
 def full_app(base_app: FastAPI) -> FastAPI:
-    from src.responses import ResponseWrapperMiddleware
-    from src.handlers import register_exception_handlers
+    from src.http.middleware import ResponseWrapperMiddleware
+    from src.http.handlers import register_exception_handlers
 
     base_app.add_middleware(ResponseWrapperMiddleware)
     register_exception_handlers(base_app)

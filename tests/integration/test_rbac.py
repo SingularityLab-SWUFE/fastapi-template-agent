@@ -114,10 +114,10 @@ async def superuser_user(test_db, rbac_data):
 
 @pytest.fixture
 async def rbac_client(test_db, local_cache, admin_user, regular_user, superuser_user):
-    from src.api import auth_router
+    from src.http.routers import auth_router
     from src.cache import get_cache
-    from src.handlers import register_exception_handlers
-    from src.responses.middleware import ResponseWrapperMiddleware
+    from src.http.handlers import register_exception_handlers
+    from src.http.middleware import ResponseWrapperMiddleware
     from src.session import get_session
 
     app = FastAPI()

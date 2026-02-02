@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, Response as FastAPIResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from .base import Response
+from .response import Response
 
 
 class ResponseWrapperMiddleware(BaseHTTPMiddleware):

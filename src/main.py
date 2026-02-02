@@ -4,12 +4,12 @@ from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 from starlette.middleware import Middleware
 
-from src.api import auth_router, core_router, create_oauth_router
+from src.http.routers import auth_router, core_router, create_oauth_router
 from src.cache import close_cache, init_cache
 from src.config import get_settings
-from src.handlers import register_exception_handlers
-from src.logging import setup_logging
-from src.responses.middleware import ResponseWrapperMiddleware
+from src.http.handlers import register_exception_handlers
+from src.http.logging import setup_logging
+from src.http.middleware import ResponseWrapperMiddleware
 
 from .session import close_db, init_db
 

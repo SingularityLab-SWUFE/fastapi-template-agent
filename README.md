@@ -45,7 +45,7 @@ This repo also provides a full-featured, best-practiced backend template for bui
 This repo follows **Domain-Driven Design (DDD)** principles to structure the codebase for better maintainability and scalability:
 
 - **Domain Modules**: Each domain (e.g., `auth/`, `users/`) has its own module containing models(SQLTable), schemas (Request/Response), services.
-- **Representation Layer**: `api/` module handles HTTP requests, routing, and controllers. You can add `grpc`, `graphql` in this layer as needed.
+- **Representation Layer**: `http/` module handles HTTP requests, routing, and controllers. You can add `grpc`, `graphql` in this layer as needed.
 - **Core Layer**: `core/` module contains business-related domains.
 
 The `shared/` module contains **cross-cutting concerns** used by multiple domains. Before adding code to `shared/`, it must meet these criteria:
@@ -167,7 +167,7 @@ All JSON responses automatically wrapped in `{code, msg, data}` format:
 
 ```python
 from fastapi import APIRouter
-from src.responses import Response
+from src.http import Response
 
 router = APIRouter()
 
