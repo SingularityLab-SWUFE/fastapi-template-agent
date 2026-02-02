@@ -3,7 +3,6 @@ from enum import IntEnum
 
 class ErrorCode(IntEnum):
     AUTH_INVALID_CREDENTIALS = 10001
-    AUTH_INVALID_PASSWORD = 10002
     AUTH_TOKEN_INVALID = 10004
     AUTH_ACCOUNT_LOCKED = 10005
 
@@ -23,7 +22,6 @@ class ErrorCode(IntEnum):
 
 ERROR_CODE_TO_HTTP = {
     ErrorCode.AUTH_INVALID_CREDENTIALS: 401,
-    ErrorCode.AUTH_INVALID_PASSWORD: 401,
     ErrorCode.AUTH_TOKEN_INVALID: 401,
     ErrorCode.AUTH_ACCOUNT_LOCKED: 403,
     ErrorCode.USER_NOT_FOUND: 404,

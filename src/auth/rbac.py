@@ -9,7 +9,10 @@ from src.audit import AuditService, generate_request_id, get_audit_service
 from src.audit.schemas import AuditAction, AuditResult
 from src.audit.service import extract_client_info
 from src.auth.models import Permission, Role, RolePermission, User, UserRole
-from src.exceptions import InsufficientPermissionException, InsufficientRoleException
+from src.auth.exceptions import (
+    InsufficientPermissionException,
+    InsufficientRoleException,
+)
 from src.session import get_session
 
 from . import current_user
