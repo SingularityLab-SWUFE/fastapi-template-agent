@@ -36,7 +36,6 @@ class AuditRepository:
             extra=extra,
         )
         self.session.add(audit_log)
-        await self.session.commit()
 
 
 class AuditService:
@@ -67,7 +66,9 @@ class AuditService:
                 extra=extra,
                 request_id=request_id,
             )
+            await self.repository.session.commit()
         except Exception:
+            await self.repository.session.rollback()
             logger.exception("Failed to create audit log")
 
 
