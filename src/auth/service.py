@@ -1,5 +1,6 @@
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_users.authentication import JWTStrategy
 
 from src.audit import AuditService, get_audit_service
 from src.audit.schemas import AuditAction, AuditResult
@@ -19,7 +20,7 @@ class AuthenticationService:
     def __init__(
         self,
         user_manager: UserManager,
-        strategy,
+        strategy: JWTStrategy,
         refresh_manager: RefreshTokenManager,
         audit_service: AuditService,
     ):
@@ -132,7 +133,7 @@ class AuthenticationService:
 
 async def get_auth_service(
     user_manager: UserManager = Depends(get_user_manager),
-    strategy=Depends(get_jwt_strategy),
+    strategy: JWTStrategy = Depends(get_jwt_strategy),
     refresh_manager: RefreshTokenManager = Depends(get_refresh_token_manager),
     audit_service: AuditService = Depends(get_audit_service),
 ) -> AuthenticationService:
