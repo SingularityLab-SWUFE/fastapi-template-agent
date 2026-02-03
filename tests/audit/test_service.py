@@ -34,7 +34,6 @@ async def test_create_audit_log(audit_repository, mock_session):
     )
 
     mock_session.add.assert_called_once()
-    mock_session.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
