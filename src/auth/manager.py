@@ -9,6 +9,8 @@ from src.auth.models import OAuthAccount, User
 from src.config import Settings, get_settings
 from src.session import get_session
 
+from .backend import RefreshTokenManager, get_refresh_token_manager
+
 
 async def get_user_db(
     session: AsyncSession = Depends(get_session),
@@ -17,9 +19,12 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    def __init__(self, user_db, settings: Settings):
+    def __init__(
+        self, user_db, settings: Settings, refresh_manager: RefreshTokenManager
+    ):
         super().__init__(user_db)
         self.settings = settings
+        self.refresh_manager = refresh_manager
 
     @property
     def reset_password_token_secret(self):
@@ -42,16 +47,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_reset_password(
         self, user: User, request: Request | None = None
     ) -> None:
-        from src.cache import cache
-
-        from .backend import RefreshTokenManager
-
-        refresh_manager = RefreshTokenManager(cache, self.settings)
-        await refresh_manager.revoke_all_user_tokens(user.id)
+        await self.refresh_manager.revoke_all_user_tokens(user.id)
 
 
 async def get_user_manager(
     user_db=Depends(get_user_db),
     settings: Settings = Depends(get_settings),
+    refresh_manager: RefreshTokenManager = Depends(get_refresh_token_manager),
 ) -> AsyncGenerator[UserManager, None]:
-    yield UserManager(user_db, settings)
+    yield UserManager(user_db, settings, refresh_manager)
