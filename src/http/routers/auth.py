@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from src.audit import AuditService, get_audit_service
 from src.audit.schemas import AuditAction, AuditResult
-from src.audit.service import extract_client_info
+from src.http.utils import extract_client_info
 from src.auth import fastapi_users
 from src.auth.backend import (
     RefreshTokenManager,
