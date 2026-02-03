@@ -87,6 +87,7 @@ from .schemas import (  # noqa: E402
     UserRead,
     UserUpdate,
 )
+from .service import AuthenticationService, get_auth_service  # noqa: E402
 
 __all__ = [
     "fastapi_users",
@@ -106,4 +107,6 @@ __all__ = [
     "UserUpdate",
     "TokenResponse",
     "MessageResponse",
+    "AuthenticationService",
+    "get_auth_service",
 ]
