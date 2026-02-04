@@ -117,7 +117,7 @@ async def test_rbac_audit_includes_request_id(
     test_app_with_protected_route, test_user, test_db
 ):
     from src.auth import require_permissions
-    from src.auth.models import Permission, RolePermission
+    from src.auth.rbac.models import Permission, RolePermission, UserRole
     from src.main import app
 
     async with test_db() as session:
@@ -128,8 +128,6 @@ async def test_rbac_audit_includes_request_id(
         role_perm = RolePermission(role_id=1, permission_id=100)
         session.add(role_perm)
         await session.commit()
-
-        from src.auth.models import UserRole
 
         user_role = UserRole(user_id=test_user.id, role_id=1)
         session.add(user_role)

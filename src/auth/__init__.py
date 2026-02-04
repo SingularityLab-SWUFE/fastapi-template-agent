@@ -68,14 +68,12 @@ async def current_superuser(
     return user
 
 
-from .models import (  # noqa: E402
-    OAuthAccount,
+from .models import OAuthAccount, User  # noqa: E402
+from .rbac import (  # noqa: E402
     Permission,
     Role,
     RolePermission,
     UserRole,
-)
-from .rbac import (  # noqa: E402
     owner_or_perm,
     require_permissions,
     require_roles,
