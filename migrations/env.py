@@ -8,8 +8,6 @@ from sqlmodel import SQLModel
 from alembic import context
 from src.config import get_settings
 
-from src.audit.schemas import AuditLog  # noqa: F401
-
 config = context.config
 
 # Get settings before setting URL

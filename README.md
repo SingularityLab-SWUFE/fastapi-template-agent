@@ -49,6 +49,7 @@ This repo also provides a full-featured, best-practiced backend template for bui
 - **Standardized Responses**: Middleware for consistent, unified JSON response formatting across all endpoints.
 - **Custom Error Codes**: Flexible handling of business-specific error codes and messages.
 - **Pagination**: Built-in support for paginating query results using `fastapi-pagination`.
+- **Timezone Handling**: UTC storage with presentation-layer conversion - store in UTC, query in UTC, convert to local time at presentation time.
 
 ### DDD guidelines
 
