@@ -20,12 +20,22 @@ Have you ever been bothered by coding agent consistently wasting token usage? Th
 | Agent product | Instruction file |
 | --- | --- |
 | Codex | `AGENTS.md` (source of truth) |
-| Claude Code | `CLAUDE.md` |
 | Cline | `.clinerules` |
 | Cursor | `.cursorrules` |
 | GitHub Copilot | `.github/copilot-instructions.md` |
 
 You can use the same pattern to your any other project that uses coding agent as well.
+
+#### Project-Level Claude Configuration
+
+For Claude Code, configure agent behaviors in `.claude/` directory:
+
+- **Rules** (`.claude/rules.md`) - Output standards and coding guidelines
+- **Skills** (`.claude/skills/*/SKILL.md`) - Reusable workflows like backend patterns, testing guidelines, TDD cycle
+- **Commands** (`.claude/commands/*.md`) - Slash commands for subagents: `/review`, `/plan`, `/refactor`, `/tdd`
+- **Subagents** (`.claude/agents/*.md`) - Specialized agents for code review, planning, refactoring
+
+Inspired by [everything-claude-code](https://github.com/affaan-m/everything-claude-code), few patterns were summarized to help you better utilize Claude for coding a backend project.
 
 ### Backend
 
