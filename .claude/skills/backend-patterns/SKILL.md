@@ -144,3 +144,29 @@ async def fetch_user(user_id: int):
         response.raise_for_status()
         return response.json()
 ```
+
+### Timezone Handling
+**Principle**: Store in UTC, query in UTC, convert to local time at presentation time.
+
+```python
+# Storage (models)
+from datetime import UTC, datetime
+from src.mixins import TimestampMixin
+
+class Order(SQLModel, TimestampMixin, table=True):
+    # created_at, updated_at stored in UTC
+    pass
+
+# Presentation (serializers)
+from datetime import timedelta, timezone
+from src.config import get_settings
+
+class OrderResponse(BaseModel):
+    created_at: datetime
+
+    @field_serializer('created_at')
+    def serialize_dt(self, dt: datetime, _info):
+        tz_offset = get_settings().app.timezone
+        local_tz = timezone(timedelta(hours=tz_offset))
+        return dt.astimezone(local_tz)
+```

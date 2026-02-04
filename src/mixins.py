@@ -1,32 +1,19 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime
 from sqlmodel import Field
 
 
-def get_timezone() -> timezone:
-    """Get configured timezone, defaults to UTC+8 if not configured"""
-    try:
-        from src.config import get_settings
-
-        tz_offset = get_settings().app.timezone
-        return timezone(timedelta(hours=tz_offset))
-    except ImportError:
-        return timezone(timedelta(hours=8))
-
-
-def now() -> datetime:
-    """Get current datetime with configured timezone"""
-    return datetime.now(get_timezone())
-
-
 class TimestampMixin:
-    created_at: datetime = Field(
-        default_factory=now,
-        sa_type=DateTime(timezone=True),
-    )
+    """Provides UTC timestamp fields for models.
+
+    Principle: Store in UTC, query in UTC, convert to local time at presentation time.
+
+    For display in local timezone, convert using settings.app.timezone
+    in the presentation layer (Pydantic serializers, API responses).
+    """
+
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(
-        default_factory=now,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"onupdate": now},
+        default_factory=lambda: datetime.now(UTC),
+        sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)},
     )
