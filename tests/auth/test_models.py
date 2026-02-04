@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from src.auth.models import Permission, Role, RolePermission, UserRole
+from src.auth.rbac.models import Permission, Role, RolePermission, UserRole
 
 
 class TestRoleSchema:

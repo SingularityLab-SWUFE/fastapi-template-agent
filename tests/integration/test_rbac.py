@@ -4,8 +4,8 @@ from httpx import ASGITransport, AsyncClient
 
 from src.auth import owner_or_perm, require_permissions, require_roles
 from src.auth.models import User
+from src.auth.rbac.models import Permission, RolePermission, UserRole
 from src.shared.errors import ErrorCode
-from src.auth.models import Permission, RolePermission, UserRole
 
 
 @pytest.fixture
