@@ -35,6 +35,8 @@ For Claude Code, configure agent behaviors in `.claude/` directory:
 - **Commands** (`.claude/commands/*.md`) - Slash commands for subagents: `/review`, `/plan`, `/refactor`, `/tdd`
 - **Subagents** (`.claude/agents/*.md`) - Specialized agents for code review, planning, refactoring
 
+Built-in slash commands and automatic skill discovery in `.claude/*` are currently Claude Code-only behaviors.
+
 Inspired by [everything-claude-code](https://github.com/affaan-m/everything-claude-code), few patterns were summarized to help you better utilize Claude for coding a backend project.
 
 ### Backend
@@ -117,7 +119,6 @@ The compose files read environment variables from the repository root `.env` fil
 
 This repo keeps a single source of truth for agent rules in `AGENTS.md`, and syncs it to:
 
-- `CLAUDE.md`
 - `.clinerules`
 - `.cursorrules`
 - `.github/copilot-instructions.md`
@@ -129,6 +130,8 @@ just agent-rules-sync
 ```
 
 The `pre-commit` hook `agent-rules` runs the same check on commit.
+
+For Codex, Cline, Cursor, and GitHub Copilot, `.claude` slash-command execution and skill auto-discovery are not built-in.
 
 ## Usage Examples
 
