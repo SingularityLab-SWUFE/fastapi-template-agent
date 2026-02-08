@@ -10,6 +10,11 @@ This file provides guidance to any coding agent when working with code in this r
 
 [@CONTRIBUTIONS.md](/CONTRIBUTIONS.md)
 
+## Discovery
+- Skills live in `.claude/skills/*/SKILL.md` and should be loaded only on demand.
+- Agents live in `.claude/agents/*.md` and should be used when task intent matches.
+- Command templates live in `.claude/commands/*.md` and should be fetched when needed.
+
 ## Output Rules (Most Important)
 
 ### Prohibited Unnecessary Output
