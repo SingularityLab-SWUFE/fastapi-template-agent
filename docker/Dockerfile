@@ -1,7 +1,10 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
+
+# use aliyun mirror if you need it
+RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc libpq-dev build-essential postgresql-client \
@@ -12,8 +15,7 @@ WORKDIR /app
 # copy repository into image. .dockerignore will exclude tests, docs and other dev files
 COPY . .
 
-RUN python -m pip install --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir .
+RUN uv pip install --system --no-cache .
 
 EXPOSE 8000
 

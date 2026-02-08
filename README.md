@@ -102,7 +102,7 @@ To enables/configures ci, create repository variables and secrets as needed:
 - Start services (production):
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+just compose-deploy
 ```
 
 - Start services for development (mounts project and enables hot reload):

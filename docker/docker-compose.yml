@@ -1,18 +1,20 @@
-version: '3.9'
-
 services:
   app:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      pull: true
     image: fastapi-boilerplate:latest
     env_file:
       - ../.env
     ports:
       - "8000:8000"
+    restart: unless-stopped
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
@@ -35,6 +37,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
