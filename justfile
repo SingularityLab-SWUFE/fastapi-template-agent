@@ -31,6 +31,9 @@ run port=PORT:
 @benchmark:
     uv run locust -f tests/locustfile.py
 
+@compose-deploy:
+    docker compose -f docker/docker-compose.yml up -d --build
+
 # Generate database migration
 @db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
