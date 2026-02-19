@@ -95,6 +95,13 @@ To enables/configures ci, create repository variables and secrets as needed:
 - `CI_DB_DATABASE`
 - `CI_DB_DRIVER`
 
+### Claude Code Action
+
+Claude CI workflows (`claude.yml`, `claude-code-review.yml`) require:
+
+- `ANTHROPIC_API_KEY` - API key for authentication
+- `ANTHROPIC_BASE_URL` - Custom API endpoint (set via `env:` block as a workaround until [claude-code-action#840](https://github.com/anthropics/claude-code-action/issues/840) adds native `base_url` input)
+
 ## Deploy
 
 ### Docker Setup
