@@ -1,4 +1,5 @@
 import pytest
+from fastapi_users.password import PasswordHelper
 
 from src.auth.models import User
 from src.auth.rbac.models import Permission, RolePermission, UserRole
@@ -33,8 +34,6 @@ async def rbac_data(test_db):
 
 @pytest.fixture
 async def admin_user(test_db, rbac_data):
-    from fastapi_users.password import PasswordHelper
-
     password_helper = PasswordHelper()
     hashed_password = password_helper.hash("admin123")
 
@@ -55,13 +54,11 @@ async def admin_user(test_db, rbac_data):
         session.add(user_role)
         await session.commit()
 
-        yield user
+    yield user
 
 
 @pytest.fixture
 async def regular_user(test_db, rbac_data):
-    from fastapi_users.password import PasswordHelper
-
     password_helper = PasswordHelper()
     hashed_password = password_helper.hash("user123")
 
@@ -82,13 +79,11 @@ async def regular_user(test_db, rbac_data):
         session.add(user_role)
         await session.commit()
 
-        yield user
+    yield user
 
 
 @pytest.fixture
 async def superuser_user(test_db, rbac_data):
-    from fastapi_users.password import PasswordHelper
-
     password_helper = PasswordHelper()
     hashed_password = password_helper.hash("super123")
 
@@ -105,4 +100,4 @@ async def superuser_user(test_db, rbac_data):
         await session.commit()
         await session.refresh(user)
 
-        yield user
+    yield user

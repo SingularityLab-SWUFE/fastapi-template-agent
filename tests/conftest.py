@@ -94,7 +94,7 @@ async def test_engine(tmp_path_factory) -> AsyncGenerator[AsyncEngine, None]:
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def test_db(test_engine: AsyncEngine):
     async_session = sessionmaker(
         test_engine, class_=AsyncSession, expire_on_commit=False
