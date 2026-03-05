@@ -8,7 +8,6 @@ from fakeredis import FakeAsyncRedis
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from loguru import logger
-from redis.asyncio.client import Redis as AsyncRedisClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -21,11 +20,6 @@ from src.session import get_session
 
 env_path = Path(__file__).parent.parent / ".env-example"
 dotenv.load_dotenv(dotenv_path=env_path)
-
-
-class _FakeRedisClientNoDeprecatedParams(AsyncRedisClient):
-    def __init__(self, *, decode_responses: bool = False, **kwargs):
-        super().__init__(decode_responses=decode_responses, **kwargs)
 
 
 @pytest.fixture
@@ -135,9 +129,7 @@ async def local_cache():
 @pytest.fixture
 async def redis_cache():
     cache = RedisCache(host="localhost", port=6379, db=1)
-    cache._client = FakeAsyncRedis(
-        decode_responses=True, client_class=_FakeRedisClientNoDeprecatedParams
-    )
+    cache._client = FakeAsyncRedis(decode_responses=True)
     await cache.clear()
     yield cache
     await cache.clear()
