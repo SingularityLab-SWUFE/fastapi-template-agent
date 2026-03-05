@@ -5,6 +5,18 @@ project_name:
   help: Project name
   default: my-backend-project
 
+git_platform:
+  help: Git platform for workflow operations
+  choices:
+    - github
+    - gitlab
+  default: github
+
+init_git_repo:
+  type: bool
+  help: Initialize git repository with `git init` after project copy
+  default: true
+
 development_database:
   help: Development database type
   choices:
@@ -120,6 +132,9 @@ github_oauth_client_secret:
 _answers_file: .copier/.copier-answers.yml
 
 _tasks:
-  - command: ["{{ _copier_python }}", ".copier/post_copy.py"]
+  - command: ["git", "init"]
+    when: "{{ _copier_operation == 'copy' and init_git_repo }}"
+    description: Initialize Git Repository
+  - command: ["{{ _copier_python }}", ".copier/post_copy.py", "{{ git_platform }}"]
     when: "{{ _copier_operation == 'copy' }}"
     description: Templates Overwrite
