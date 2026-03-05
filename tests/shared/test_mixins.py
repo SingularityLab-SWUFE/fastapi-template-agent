@@ -25,10 +25,12 @@ async def mixin_db():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
-    yield async_session
-
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
+    try:
+        yield async_session
+    finally:
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.drop_all)
+        await engine.dispose()
 
 
 async def test_timestamp_mixin_updated_at_updates(mixin_db):

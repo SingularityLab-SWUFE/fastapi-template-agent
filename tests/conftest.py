@@ -3,12 +3,13 @@ from typing import AsyncGenerator
 
 import dotenv
 import pytest
+import pytest_asyncio
 from fakeredis import FakeAsyncRedis
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from loguru import logger
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 
@@ -74,23 +75,36 @@ async def async_client(full_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
         yield client
 
 
-@pytest.fixture
-async def test_db():
+@pytest_asyncio.fixture(scope="session")
+async def test_engine(tmp_path_factory) -> AsyncGenerator[AsyncEngine, None]:
+    db_file = tmp_path_factory.mktemp("db") / "test.db"
     engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
+        f"sqlite+aiosqlite:///{db_file}",
         echo=False,
         connect_args={"check_same_thread": False},
     )
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-    async with engine.connect() as conn:
-        await conn.execute(text("PRAGMA foreign_keys=ON"))
-        await conn.commit()
+    @event.listens_for(engine.sync_engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, _):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
-    async with engine.begin() as conn:
+    yield engine
+    await engine.dispose()
+
+
+@pytest.fixture(scope="function")
+async def test_db(test_engine: AsyncEngine):
+    async_session = sessionmaker(
+        test_engine, class_=AsyncSession, expire_on_commit=False
+    )
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
-    async with engine.connect() as conn:
+    async with test_engine.connect() as conn:
         await insert_rbac_seed_data_async(conn)
 
     async def override_get_session():
@@ -99,12 +113,10 @@ async def test_db():
 
     app.dependency_overrides[get_session] = override_get_session
 
-    yield async_session
-
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
-
-    app.dependency_overrides.clear()
+    try:
+        yield async_session
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture
