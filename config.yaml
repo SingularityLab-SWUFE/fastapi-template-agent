@@ -1,0 +1,52 @@
+# Application configuration.
+# Plain values are used directly as defaults.
+# $VAR placeholders declare secret keys that must be provided via env/.env;
+# see .env-example for the required variables.
+#
+# Any value here can be overridden at runtime by setting the corresponding
+# env var with __ separator (e.g. APP__DEBUG=true).
+# Precedence: init > env > dotenv > yaml
+
+app:
+  name: fastapi-boilerplate
+  version: "0.1.0"
+  debug: false
+  host: "0.0.0.0"
+  port: 8000
+  timezone: 8
+
+log:
+  level: INFO
+  json_logs: false
+
+db:
+  driver: postgresql
+  host: db
+  port: 5432
+  user: postgres
+  password: $DB__PASSWORD
+  database: appdb
+  echo: false
+
+cache:
+  backend: redis
+  host: redis
+  port: 6379
+  db: 0
+  password: $CACHE__PASSWORD
+  encoding: utf-8
+  decode_responses: true
+  socket_timeout: 5
+  socket_connect_timeout: 5
+  max_connections: 50
+  retry_on_timeout: true
+
+auth:
+  jwt_secret: $AUTH__JWT_SECRET
+  jwt_algorithm: HS256
+  jwt_lifetime_seconds: 1800
+  refresh_token_lifetime_seconds: 2592000
+  oauth_google_client_id: null
+  oauth_google_client_secret: $AUTH__OAUTH_GOOGLE_CLIENT_SECRET
+  oauth_github_client_id: null
+  oauth_github_client_secret: $AUTH__OAUTH_GITHUB_CLIENT_SECRET

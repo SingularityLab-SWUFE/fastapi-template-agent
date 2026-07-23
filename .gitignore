@@ -287,10 +287,6 @@ http-client.private.env.json
 # .claude/
 settings.local.json
 
-# Docker & Kubernetes secrets
-config.yaml
-k8s/secret.yaml
-
 # Database
 *.db
 
