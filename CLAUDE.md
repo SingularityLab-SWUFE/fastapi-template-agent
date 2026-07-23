@@ -9,6 +9,4 @@ Claude Code uses configuration files in `.claude/` directory:
 - **Rules**: [@.claude/rules.md](/.claude/rules.md) (Always loaded)
 - **Skills**: Available task-specific workflows (auto-discovered via `.claude/skills/*/SKILL.md` and `.claude/commands/*.md`)
 - **Agents**: Subagent configurations (spawn when needed via `.claude/agents/`)
-  - `code-reviewer` - Code review criteria
-  - `planner` - Planning workflow
-- **Knowledge**: Project-specific context (via `.claude/knowledge/`)
+- **Knowledge**: Project-specific context (via `README.md`, and `.claude/knowledge/`)
