@@ -633,7 +633,7 @@ dependencies = [
     { name = "fastapi-users", extra = ["sqlalchemy"] },
     { name = "httpx-oauth" },
     { name = "loguru" },
-    { name = "pydantic-settings" },
+    { name = "pydantic-settings", extra = ["yaml"] },
     { name = "redis", extra = ["hiredis"] },
     { name = "sqlmodel" },
     { name = "tenacity" },
@@ -662,7 +662,7 @@ requires-dist = [
     { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=15.0.5" },
     { name = "httpx-oauth", specifier = ">=0.17.0" },
     { name = "loguru", specifier = ">=0.7.3" },
-    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.14.2" },
     { name = "redis", extras = ["hiredis"], specifier = ">=8.0.1" },
     { name = "sqlmodel", specifier = ">=0.0.39" },
     { name = "tenacity", specifier = ">=9.1.4" },
@@ -1489,6 +1489,11 @@ dependencies = [
 sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/5c/b5/8f48e906c3e0205276e8bd8cb7512217a87b2685304d64be27cad5b3019f/pydantic_settings-2.14.2.tar.gz", hash = "sha256:c19dd64b19097f1de80184f0cc7b0272a13ae6e170cbf240a3e27e381ed14a5f", size = 237700, upload-time = "2026-06-19T13:44:56.324Z" }
 wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/77/c1/6e422f34e569cf8e18df68d1939c81c099d2b61e4f7d9621c8a77560799c/pydantic_settings-2.14.2-py3-none-any.whl", hash = "sha256:a20c97b37910b6550d5ea50fbcc2d4187defe58cd57070b73863d069419c9440", size = 61715, upload-time = "2026-06-19T13:44:55.02Z" },
+]
+
+[package.optional-dependencies]
+yaml = [
+    { name = "pyyaml" },
 ]
 
 [[package]]

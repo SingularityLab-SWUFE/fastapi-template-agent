@@ -51,3 +51,18 @@ def test_settings_loading_env_variables():
     settings = get_settings()
     assert settings.app.name == "Test App Loading env var"
     assert settings.db.host == "db"
+
+
+def test_settings_loads_yaml_from_custom_env_file(tmp_path, monkeypatch):
+    from src.config.settings import Settings
+
+    yaml_file = tmp_path / "custom.yaml"
+    yaml_file.write_text("app:\n  port: 9001\n")
+    env_file = tmp_path / "custom.env"
+    env_file.write_text(f"APP_CONFIG_FILE={yaml_file}\n")
+    monkeypatch.delenv("APP_CONFIG_FILE")
+    monkeypatch.chdir(tmp_path)
+
+    settings = Settings(_env_file=env_file)
+
+    assert settings.app.port == 9001

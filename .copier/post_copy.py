@@ -6,7 +6,7 @@ root = Path.cwd()
 copier_dir = root / ".copier"
 git_platform = sys.argv[1] if len(sys.argv) > 1 else "github"
 
-for f in ["README.md", "pyproject.toml", ".env"]:
+for f in ["README.md", "pyproject.toml", ".env", "config.yaml"]:
     src = copier_dir / f
     dst = root / f
     if src.exists():

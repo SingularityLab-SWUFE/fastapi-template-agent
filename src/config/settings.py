@@ -2,10 +2,11 @@ import os
 from pathlib import Path
 import re
 from typing import Any
-from dotenv import dotenv_values
+
 from pydantic import Field
 from pydantic_settings import (
     BaseSettings,
+    DotEnvSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
     YamlConfigSettingsSource,
@@ -60,12 +61,14 @@ class AppYamlConfigSettingsSource(YamlConfigSettingsSource):
 
     @classmethod
     def resolve(
-        cls, settings_cls: type[BaseSettings]
+        cls,
+        settings_cls: type[BaseSettings],
+        dotenv_settings: DotEnvSettingsSource,
     ) -> "AppYamlConfigSettingsSource | None":
         """Bootstrap yaml config source for the app, if APP_CONFIG_FILE set."""
-        config_file = os.getenv("APP_CONFIG_FILE") or dotenv_values(".env").get(
-            "APP_CONFIG_FILE"
-        )
+        config_file = os.environ.get("APP_CONFIG_FILE")
+        if config_file is None:
+            config_file = dotenv_settings.env_vars.get("app_config_file")
         if not config_file:
             return None
         yaml_file = Path(config_file)
@@ -93,7 +96,7 @@ class Settings(BaseSettings):
         settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
         env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
+        dotenv_settings: DotEnvSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         sources: list[PydanticBaseSettingsSource] = [
@@ -101,7 +104,7 @@ class Settings(BaseSettings):
             env_settings,
             dotenv_settings,
         ]
-        yaml_source = AppYamlConfigSettingsSource.resolve(settings_cls)
+        yaml_source = AppYamlConfigSettingsSource.resolve(settings_cls, dotenv_settings)
         if yaml_source:
             sources.append(yaml_source)
         sources.append(file_secret_settings)
